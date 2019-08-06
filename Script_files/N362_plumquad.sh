@@ -18,7 +18,10 @@ source activate PyMN
 export LD_LIBRARY_PATH=$HOME/multinest/MultiNest/lib/:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/own_codes:$PYTHONPATH
 
-mpirun -n 32 python N362_plumquad.py
+mpirun -n 32 python N362_calking.py
+mpirun -n 32 python N362_calkingoldPM.py
+mpirun -n 32 python N362_calking_iso.py
+
 
 #python omega_calk5_orig.py
 
