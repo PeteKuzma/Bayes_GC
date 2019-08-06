@@ -1,6 +1,6 @@
 #!/bin/bash
 # Grid Engine options (lines prefixed with #$)
-#$ -N omega_attemptback
+#$ -N omega_orig
 #$ -cwd
 #$ -l h_rt=48:00:00
 #$ -l h_vmem=4G
