@@ -20,10 +20,10 @@ export PYTHONPATH=$HOME/own_codes:$PYTHONPATH
 #mpirun -n 16 python omega_calking.py
 #mpirun -n 32 python omega_calking2.py
 #mpirun -n 32 python omega_calk52.py
-mpirun -n 32 python omega_calk_orig.py
-mpirun -n 32 python omega_calk5.py
-#mpirun -n 16 python omega_calk5.py
-#mpirun -n 16 python omega_calking.py
+mpirun -n 32 python omegaORIG_calking_iso.py
+mpirun -n 32 python omegaORIG_calkingoldPM.py
+mpirun -n 32 python omegaORIG_calking.py
+
 
 #python omega_calk5_orig.py
 #python omega_calk_orig.py
