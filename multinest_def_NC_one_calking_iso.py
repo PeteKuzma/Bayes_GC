@@ -171,7 +171,7 @@ class PyNM:
 			print("Set-up not performed. Please run PyMultinest_setup.")		
 
 
-	def L_pm_GC_new(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the Satellite. The variables are:
 		x_g = cube for proper motion in x-profection
@@ -191,7 +191,7 @@ class PyNM:
 
 
 
-	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_GC_old(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the Satellite. The variables are:
 		x_g = cube for proper motion in x-profection
