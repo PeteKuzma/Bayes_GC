@@ -113,7 +113,7 @@ class PyNM:
 		self.w_par=M2['w_iso']
 		self.tr=tr
 		self.cr=cr
-		self.King=where(M2['dist']<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),1e-40)
+		self.King=where(M2['dist']<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),0)
 		#self.cv_raer=M2['ra_error']
 		#self.cv_deer=M2['dec_error']
 		#self.cv_radeccov=M2['ra_dec_corr']
@@ -291,7 +291,7 @@ class PyNM:
 		'''
 		gcct=self.L_sat_quad(x_ps,y_ps,sample[:,12],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(sqrt(x_ps**2+y_ps**2)<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-40)
+		gcsp=where(sqrt(x_ps**2+y_ps**2)<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
 		#gcsp=self.King
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
