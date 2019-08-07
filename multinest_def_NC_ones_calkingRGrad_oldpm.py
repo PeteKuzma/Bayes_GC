@@ -170,7 +170,7 @@ class PyNM:
 			print("Set-up not performed. Please run PyMultinest_setup.")		
 
 
-	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_GCOLD(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the Satellite. The variables are:
 		x_g = cube for proper motion in x-profection
@@ -190,7 +190,7 @@ class PyNM:
 
 
 
-	def L_pm_GCOLD(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the Satellite. The variables are:
 		x_g = cube for proper motion in x-profection
@@ -231,7 +231,7 @@ class PyNM:
 
 
 
-	def L_pm_MW(self,x_g,y_g,sx_g,sy_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_MWold(self,x_g,y_g,sx_g,sy_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the cluster. The variables are:
 		x_g = cube for proper motion in x-profection
@@ -250,7 +250,7 @@ class PyNM:
 		+cv_pmdecer**2*sx_g**2+sy_g**2*cv_pmraer**2+sx_g**2*sy_g**2)))*exp(-expn/expd)
 		return mc
 
-	def L_pm_MWOLD(self,x_g,y_g,sx_g,sy_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
+	def L_pm_MW(self,x_g,y_g,sx_g,sy_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
 		Max log-likelihood from the proper motions of the cluster. The variables are:
 		x_g = cube for proper motion in x-profection
