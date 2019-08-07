@@ -35,10 +35,10 @@ def prior(cube, ndim, nparams):
 	cube[13] = 10**(10*cube[13]-5)
 
 
-PMN.PyMultinest_setup(prior,0,50000,0.0372,0.8168,select=False,existing=True,Fadd="_orig",rmax=4,pm_sel="gnom",live_points=200)
-#PMN.PyMultinest_run()
+PMN.PyMultinest_setup(prior,0,50000,0.0372,0.8168,select=False,existing=True,Fadd="_4deg",rmax=4,pm_sel="gnom",live_points=200)
+PMN.PyMultinest_run()
 PMN.PyMultinest_results()
 #PMN.PyMultinest_plots()
 
 
-PMN.Membership_after_PyNM(10000,PMN.rad_sel)
+#PMN.Membership_after_PyNM(10000,PMN.rad_sel)

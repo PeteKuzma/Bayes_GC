@@ -1,0 +1,24 @@
+WARNING: If you use conda to create environments, your home directory may fill up. Please see our documentation at 
+ https://www.wiki.ed.ac.uk/display/ResearchServices/Anaconda for advice.
+Traceback (most recent call last):
+  File "omega_calking.py", line 43, in <module>
+    PMN.PyMultinest_plots()
+  File "/home/pkuzma/own_codes/multinest_def_NC_one_calking.py", line 148, in PyMultinest_plots
+    plt.clf()
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/pyplot.py", line 686, in clf
+    gcf().clf()
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/pyplot.py", line 601, in gcf
+    return figure()
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/pyplot.py", line 548, in figure
+    **kwargs)
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/backend_bases.py", line 161, in new_figure_manager
+    return cls.new_figure_manager_given_figure(num, fig)
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/backend_bases.py", line 167, in new_figure_manager_given_figure
+    canvas = cls.FigureCanvas(figure)
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/backends/backend_qt5agg.py", line 24, in __init__
+    super(FigureCanvasQTAgg, self).__init__(figure=figure)
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/backends/backend_qt5.py", line 234, in __init__
+    _create_qApp()
+  File "/home/pkuzma/myanaconda/PyMN/lib/python3.6/site-packages/matplotlib/backends/backend_qt5.py", line 125, in _create_qApp
+    raise RuntimeError('Invalid DISPLAY variable')
+RuntimeError: Invalid DISPLAY variable

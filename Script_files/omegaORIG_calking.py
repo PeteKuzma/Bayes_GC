@@ -1,6 +1,6 @@
-from multinest_def_NC_ones_calking_oldpm import PyNM as PyNM
+from multinest_def_NC_one_calking import PyNM as PyNM
 print("Loaded succesfully")
-PMN=PyNM("NGC5139",35,outbase_add="oldpm_calking")
+PMN=PyNM("NGC5139",35,outbase_add="calking")
 import numpy as np
 import scipy.stats
 
@@ -36,9 +36,9 @@ def prior(cube, ndim, nparams):
 
 
 PMN.PyMultinest_setup(prior,0,50000,0.0372,0.8168,select=False,existing=True,Fadd="_orig",rmax=4,pm_sel="gnom",live_points=200)
-#PMN.PyMultinest_run()
+PMN.PyMultinest_run()
 PMN.PyMultinest_results()
 #PMN.PyMultinest_plots()
 
 
-PMN.Membership_after_PyNM(10000,PMN.rad_sel)
+#PMN.Membership_after_PyNM(10000,PMN.rad_sel)

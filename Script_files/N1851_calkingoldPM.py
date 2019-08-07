@@ -1,6 +1,6 @@
 from multinest_def_NC_ones_calking_oldpm import PyNM as PyNM
 print("Loaded succesfully")
-PMN=PyNM("NGC5139",35,outbase_add="oldpm_calking")
+PMN=PyNM("NGC1851",35,outbase_add="oldpm_calking")
 import numpy as np
 import scipy.stats
 
@@ -16,10 +16,10 @@ def GaussianPrior(r,mu,sigma):
 
 
 def prior(cube, ndim, nparams):
-	#cube[0] = GaussianPrior(cube[0],-3.234,0.039)  # Prior for x_pm,cl is between -10 to 10.
-	#cube[1] = GaussianPrior(cube[1],-6.719,0.039)  # Prior for y_pm,cl is between -10 to 10.
-	cube[0] = scipy.stats.norm(-3.234,0.039).ppf(cube[0])
-	cube[1] = scipy.stats.norm(-6.719,0.039).ppf(cube[1])
+	#cube[0] = GaussianPrior(cube[0],2.120,0.055)  # Prior for x_pm,cl is between -10 to 10.
+	#cube[1] = GaussianPrior(cube[1],-0.589,0.054)  # Prior for y_pm,cl is between -10 to 10.
+	cube[0] = scipy.stats.norm(2.129,0.055).ppf(cube[0])
+	cube[1] = scipy.stats.norm(-0.589,0.054).ppf(cube[1])
 	cube[2] = 10**(4*cube[2] - 3) # Prior for x_disp,cl is between 10^-4 to 10.
 	cube[3] = 10**(4*cube[3] - 3) # Prior for y_disp,cl is between 10^-4 to 10.
 	cube[4] = cube[4]*20 - 10  # Prior for x_pm,MW is between -10 to 10.
@@ -35,10 +35,10 @@ def prior(cube, ndim, nparams):
 	cube[13] = 10**(10*cube[13]-5)
 
 
-PMN.PyMultinest_setup(prior,0,50000,0.0372,0.8168,select=False,existing=True,Fadd="_orig",rmax=4,pm_sel="gnom",live_points=200)
-#PMN.PyMultinest_run()
+PMN.PyMultinest_setup(prior,0,50000,0.0014,0.1110,select=False,pm_sel="gnom",existing=True,Fadd="_FULL",rmax=4)
+PMN.PyMultinest_run()
 PMN.PyMultinest_results()
 #PMN.PyMultinest_plots()
 
 
-PMN.Membership_after_PyNM(10000,PMN.rad_sel)
+#PMN.Membership_after_PyNM(10000,PMN.rad_sel)

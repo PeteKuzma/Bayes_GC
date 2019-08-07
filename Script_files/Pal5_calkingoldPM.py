@@ -31,7 +31,7 @@ def prior(cube, ndim, nparams):
 	cube[11] = 10**(12*cube[11]-10)
 	#cube[12] = 10**(4*cube[12] - 3)
 	cube[12] = np.pi*cube[12]-np.pi/2.
-	cube[13] = 10**(12*cube[13]-10)
+	cube[13] = 10**(10*cube[13]-5)
 
 
 
