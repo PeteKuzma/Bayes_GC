@@ -55,8 +55,6 @@ class PyNM:
 			self.outbase_name="{0}_pymn_out_".format(cluster)
 		self.rad_sel=radius
 		self.cluster=cluster
-		self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2"]
-		self.N_params = len(self.Parameters)
 		self.cluster_F=cluster
 		self.Prior=prior
 		self.rmin=inner_radii/60.
