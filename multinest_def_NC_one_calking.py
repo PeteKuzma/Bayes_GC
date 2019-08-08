@@ -50,6 +50,7 @@ from multinest_base import PyNM
 class PyMN_RUN(PyNM):
 	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
+		self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
 		self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2"]
 		self.N_params = len(self.Parameters)
 
@@ -225,7 +226,7 @@ class PyMN_RUN(PyNM):
 		'''
 		gcct=self.L_sat_quad(x_ps,y_ps,sample[:,12],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(sqrt(x_ps**2+y_ps**2)<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
+		gcsp=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
 		#gcsp=self.King
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)

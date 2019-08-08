@@ -109,7 +109,7 @@ class PyNM:
 		self.w_par=M2['w_iso']
 		self.tr=tr
 		self.cr=cr
-		self.King=where(M2['dist']<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),0)
+		self.dist=M2['dist']
 		#self.cv_raer=M2['ra_error']
 		#self.cv_deer=M2['dec_error']
 		#self.cv_radeccov=M2['ra_dec_corr']
