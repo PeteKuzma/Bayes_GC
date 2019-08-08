@@ -42,82 +42,18 @@ import time as time
 import json
 from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10, arange, rad2deg, isnan,where
 # Ignore warnings from TAP queries
+from multinest_base import PyNM
 
 # ---------------------------------------------------
 # Definitions
 # ---------------------------------------------------
-class PyNM:
-	def __init__(self,cluster,radius,version="1",outbase_add=None):
-		if outbase_add!=None:
-			self.outbase_add=outbase_add
-			self.outbase_name="{0}_{1}_pymn_out_".format(cluster,outbase_add)
-		else:
-			self.outbase_name="{0}_pymn_out_".format(cluster)
-		self.rad_sel=radius
-		self.cluster=cluster
+class PyMN_RUN(PyNM):
+	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
+		PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
 		self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
 		self.N_params = len(self.Parameters)
-		self.cluster_F=cluster
+		self.King=where(M2['dist']<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),1e-99)
 
-	def PyMultinest_setup(self,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False):
-		self.Prior=prior
-		self.rmin=inner_radii/60.
-		self.rmax=rmax
-		self.Live_Points=live_points
-		if Fadd!=None:
-			self.cluster_F="{0}{1}".format(self.cluster,Fadd)
-		print("Changing to cluster directory:\nGaia/{0}/\n".format(self.cluster_F))
-		os.chdir(self.cluster_F)
-		if existing==True and os.path.isfile("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size)) == True: 
-			print("Load sample fits file:  \n{0}_{1}_sample_bayes.fits\n".format(self.cluster,sample_size))		
-			hdu3=fits.open("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size))
-			M2_d=Table(hdu3[1].data)
-			M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-			M2=M2[np.isnan(M2['w_iso'])==False]
-		if select==False:
-			print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
-			hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-			M2_d=Table(hdu3[1].data)
-			M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-			M2=M2[np.isnan(M2['w_iso'])==False]	
-		else:
-			print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
-			hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-			M2_d=Table(hdu3[1].data)
-			M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-			M2=M2[np.isnan(M2['w_iso'])==False]
-		if select==True and existing==False:
-			print("Selecting sample from full data set\n")
-			m2=hdu3[1].data	
-			M2=Table(m2[np.random.choice(m2.shape[0], sample_size, replace=False)])
-			self.SAMP=M2
-			M2.write("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size),format="fits",overwrite=True)
-		else:
-			print("Selecting full sample\n")
-			M2=M2
-		M2=M2[M2['dist']>=self.rmin]
-		M2=M2[M2['dist']<=rmax]
-		self.x_ps=M2['ra_g'] # Spatial position in x_projection.
-		self.y_ps=M2['dec_g'] # Spatial position in y_projection.
-		if pm_sel=="norm":
-			print("Selecting Gaia PMs\n")
-			self.x_pm=M2['pmra'] # Proper motion in ra_projection.
-			self.y_pm=M2['pmdec'] # Proper motion in dec_projection.
-		else:
-			print("Selecting projected PMs\n")
-			self.x_pm=M2['pmra_g'] # Proper motion in x_projection.
-			self.y_pm=M2['pmdec_g'] # Proper motion in y_projection.
-		self.cv_pmraer=M2['pmra_error']# Proper Motion Covariance Matrix elements - error in pmra
-		self.cv_pmdecer=M2['pmdec_error'] # Proper motion err in pmdec
-		self.cv_coeff=M2['pmra_pmdec_corr'] # Proper motion correlation factor between pmra and pmdec
-		self.w_par=M2['w_iso']
-		self.tr=tr
-		self.cr=cr
-		self.r=M2['dist']
-		self.King=where(M2['dist']<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),0)
-		#self.cv_raer=M2['ra_error']
-		#self.cv_deer=M2['dec_error']
-		#self.cv_radeccov=M2['ra_dec_corr']
 
 
 	def PyMultinest_run(self):
@@ -303,7 +239,7 @@ class PyNM:
 		#gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
 		gcct=self.L_sat_quad_randone(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
+		gcsp=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99))
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
 		mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
