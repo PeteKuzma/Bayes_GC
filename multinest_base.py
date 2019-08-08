@@ -47,7 +47,7 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 # Definitions
 # ---------------------------------------------------
 class PyNM:
-	def __init__(self,cluster,radius,version="1",outbase_add=None):
+	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		if outbase_add!=None:
 			self.outbase_add=outbase_add
 			self.outbase_name="{0}_{1}_pymn_out_".format(cluster,outbase_add)
@@ -58,8 +58,6 @@ class PyNM:
 		self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2"]
 		self.N_params = len(self.Parameters)
 		self.cluster_F=cluster
-
-	def PyMultinest_setup(self,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False):
 		self.Prior=prior
 		self.rmin=inner_radii/60.
 		self.rmax=rmax
