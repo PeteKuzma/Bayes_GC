@@ -163,19 +163,19 @@ class PyMN_RUN(PyNM):
 
 
 
-	def L_sat_quad_r(self,xt_g,yt_g,the,gam,b):
+	def L_sat_quad_r(self,xt_g,yt_g,the,gam,b,a):
 		r=sqrt(xt_g*xt_g+yt_g*yt_g)
 		theta=np.arctan2(yt_g,xt_g)
-		nom=-(r**(1-gam))*(self.rmax**(-2+gam))*(-2+gam)*(2+b+b*np.cos(2*(the-theta)))
-		dem=2*(2+b)*np.pi
+		nom=-(r**(1-gam))*(self.rmax**(-2+gam))*(-2+gam)*(2*a+b+b*np.cos(2*(the-theta)))
+		dem=2*(2*a+b)*np.pi
 		mc=nom/dem
 		return mc
 	
-	def L_sat_quad_randone(self,xt_g,yt_g,the,gam,b):
+	def L_sat_quad_randone(self,xt_g,yt_g,the,gam,b,a):
 		r=sqrt(xt_g*xt_g+yt_g*yt_g)
 		theta=np.arctan2(yt_g,xt_g)
-		nom=(-2+gam)*(r**(1-gam))*(b+2*r**gam+b*np.cos(2*the-2*theta))
-		dem=2*np.pi*self.rmax*self.rmax*(-2+gam-b*self.rmax**(-gam))
+		nom=(-2+gam)*(r**(1-gam))*(b+2*a*r**gam+b*np.cos(2*the-2*theta))*self.rmax**(-2+g)
+		dem=2*np.pi*(-b+a*(-2+gam)*self.rmax**(gam))
 		mc=nom/dem
 		return mc
 
