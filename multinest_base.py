@@ -115,8 +115,12 @@ class PyNM:
 		#self.cv_radeccov=M2['ra_dec_corr']
 		print("Changing to PyMultinest output directory:\n{0}".format{self.outbase_name})
 		try:
-		    os.chdir(self.outbase_name)
-		except:
-		    print("Output directory needs to be created. Creating now...")
-		    os.mkdir(self.outbase_name)
-		    os.chdir(self.outbase_name)
+            os.chdir(self.outbase_name)
+		except FileNotFoundError:
+		    try:
+		        print("Output directory needs to be created. Creating now...")
+		        os.mkdir(self.outbase_name)
+		        os.chdir(self.outbase_name)
+            except FileExistsError:
+                print("created as part of another thread")
+                os.chdir(self.outbase_name)
