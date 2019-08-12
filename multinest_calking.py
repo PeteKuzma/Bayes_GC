@@ -220,13 +220,13 @@ class PyMN_RUN(PyNM):
 
 
 
-	def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample):
+	def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist):
 		'''
 		Calculates the membership probability for an individual star
 		'''
 		gcct=self.L_sat_quad(x_ps,y_ps,sample[:,12],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
+		gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
 		#gcsp=self.King
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
@@ -251,7 +251,7 @@ class PyMN_RUN(PyNM):
 		Run this after PyMultiNest to calculate membership of all stars.
 		'''
 		try:
-			f_in=fits.open("{0}_bays_ready_FULL.fits".format(self.cluster))
+			f_in=fits.open("../{0}_bays_ready_FULL.fits".format(self.cluster))
 			f_data=Table(f_in[1].data)
 			f_data=f_data[f_data['dist']<=self.rmax]
 			x_ps=f_data['ra_g']
@@ -274,7 +274,7 @@ class PyMN_RUN(PyNM):
 			print("Begin to calculate Membership probability.")
 			for j in PB.progressbar(range(len(w_par))):
 				zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-				cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample)
+				cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j])
 			f_data['cl_mean']=zvf[:,0]
 			f_data['cl_std']=zvf[:,1]
 			f_data['co_mean']=zvf[:,2]
