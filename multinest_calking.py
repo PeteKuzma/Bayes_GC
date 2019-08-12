@@ -43,6 +43,7 @@ import json
 from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10, arange, rad2deg, isnan,where
 # Ignore warnings from TAP queries
 from multinest_base import PyNM
+from mpi4py import MPI
 
 # ---------------------------------------------------
 # Definitions
@@ -251,45 +252,54 @@ class PyMN_RUN(PyNM):
 		Run this after PyMultiNest to calculate membership of all stars.
 		'''
 		try:
-			f_in=fits.open("../{0}_bays_ready_FULL.fits".format(self.cluster))
-			f_data=Table(f_in[1].data)
-			f_data=f_data[f_data['dist']<=self.rmax]
-			x_ps=f_data['ra_g']
-			y_ps=f_data['dec_g']
-			if gnom==True:
-				x_pm=f_data['pmra_g']
-				y_pm=f_data['pmdec_g']
-			else:
-				x_pm=f_data['pmra']
-				y_pm=f_data['pmdec']
-			cv_pmraer=f_data['pmra_error']
-			cv_pmdecer=f_data['pmdec_error']
-			cv_coeff=f_data['pmra_pmdec_corr']
-			w_par=f_data['w_iso']
-			#self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
-			a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename= self.outbase_name)
-			RWE=a.get_data()
-			tot_sample=RWE[:,2:]
-			zvf=zeros((len(f_data),6))
-			print("Begin to calculate Membership probability.")
-			for j in PB.progressbar(range(len(w_par))):
-				zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-				cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j])
-			f_data['cl_mean']=zvf[:,0]
-			f_data['cl_std']=zvf[:,1]
-			f_data['co_mean']=zvf[:,2]
-			f_data['co_std']=zvf[:,3]
-			f_data['ts_mean']=zvf[:,4]
-			f_data['ts_std']=zvf[:,5]
-			#f_d3=f_data[f_data['mem_x']>=0.3]
-			#f_d5=f_data[f_data['mem_x']>=0.5]
-			#f_d7=f_data[f_data['mem_x']>=0.7]
-			print("Writing to files.")
-			f_data.write("{0}_mem_list_tot_{1}.fits".format(self.cluster,self.outbase_add),format="fits",overwrite=True)
-			#f_d3.write("{0}_mem_list_0_3.fits".format(self.cluster),format="fits",overwrite=True)
-			#f_d5.write("{0}_mem_list_0_5.fits".format(self.cluster),format="fits",overwrite=True)
-			#f_d7.write("{0}_mem_list_0_7.fits".format(self.cluster),format="fits",overwrite=True)
-		except FileNotFoundError:
-			print("Set-up not performed. Please run PyMultinest_setup.")
+			from mpi4py import MPI
+			rank = MPI.COMM_WORLD.Get_rank()
+			nproc = MPI.COMM_WORLD.Get_size()
 
-
+		except ImportError:
+			rank = 0
+			nproc = 1
+		if rank==0:
+			try:
+				f_in=fits.open("../{0}_bays_ready_FULL.fits".format(self.cluster))
+				f_data=Table(f_in[1].data)
+				f_data=f_data[f_data['dist']<=self.rmax]
+				x_ps=f_data['ra_g']
+				y_ps=f_data['dec_g']
+				if gnom==True:
+					x_pm=f_data['pmra_g']
+					y_pm=f_data['pmdec_g']
+				else:
+					x_pm=f_data['pmra']
+					y_pm=f_data['pmdec']
+				cv_pmraer=f_data['pmra_error']
+				cv_pmdecer=f_data['pmdec_error']
+				cv_coeff=f_data['pmra_pmdec_corr']
+				w_par=f_data['w_iso']
+				#self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
+				a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename= self.outbase_name)
+				RWE=a.get_data()
+				tot_sample=RWE[:,2:]
+				zvf=zeros((len(f_data),6))
+				print("Begin to calculate Membership probability.")
+				for j in PB.progressbar(range(len(w_par))):
+					zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
+					cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j])
+				f_data['cl_mean']=zvf[:,0]
+				f_data['cl_std']=zvf[:,1]
+				f_data['co_mean']=zvf[:,2]
+				f_data['co_std']=zvf[:,3]
+				f_data['ts_mean']=zvf[:,4]
+				f_data['ts_std']=zvf[:,5]
+				#f_d3=f_data[f_data['mem_x']>=0.3]
+				#f_d5=f_data[f_data['mem_x']>=0.5]
+				#f_d7=f_data[f_data['mem_x']>=0.7]
+				print("Writing to files.")
+				f_data.write("{0}_mem_list_tot_{1}.fits".format(self.cluster,self.outbase_add),format="fits",overwrite=True)
+				#f_d3.write("{0}_mem_list_0_3.fits".format(self.cluster),format="fits",overwrite=True)
+				#f_d5.write("{0}_mem_list_0_5.fits".format(self.cluster),format="fits",overwrite=True)
+				#f_d7.write("{0}_mem_list_0_7.fits".format(self.cluster),format="fits",overwrite=True)
+			except FileNotFoundError:
+				print("Set-up not performed. Please run PyMultinest_setup.")
+		else:
+			print("Running membership on rank one.")
