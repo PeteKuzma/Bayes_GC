@@ -28,6 +28,7 @@ import _pickle as cPickle
 #from dustmaps.sfd import SFDQuery
 from scipy.stats import norm
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from scipy.ndimage import filters
 from astropy.modeling import models, fitting
 from matplotlib import ticker
@@ -81,31 +82,42 @@ class PyMN_RUN(PyNM):
 		
 	def PyMultinest_plots(self,setup="complete",save_fig=True):
 		try:
-			a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename=self.outbase_name)
-			s = a.get_stats()
-			plt.clf()
-			p = pymultinest.PlotMarginalModes(a)
-			plt.figure(figsize=(5*self.N_params, 5*self.N_params))
-			#plt.subplots_adjust(wspace=0, hspace=0)
-			for i in range(self.N_params):
-				plt.subplot(self.N_params, self.N_params, self.N_params * i + i + 1)
-				p.plot_marginal(i, with_ellipses = True, with_points = False, grid_points=50)
-				plt.ylabel("Probability")
-				plt.xlabel(self.Parameters[i])
-	
-				for j in range(i):
-					plt.subplot(self.N_params, self.N_params, self.N_params * j + i + 1)
-					#plt.subplots_adjust(left=0, bottom=0, right=0, top=0, wspace=0, hspace=0)
-					p.plot_conditional(i, j, with_ellipses = False, with_points = True, grid_points=30)
+			from mpi4py import MPI
+			rank = MPI.COMM_WORLD.Get_rank()
+			nproc = MPI.COMM_WORLD.Get_size()
+
+		except ImportError:
+			rank = 0
+			nproc = 1
+		if rank==0:
+			try:
+				a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename=self.outbase_name)
+				s = a.get_stats()
+				#plt.clf()
+				p = pymultinest.PlotMarginalModes(a)
+				plt.figure(figsize=(5*self.N_params, 5*self.N_params))
+				#plt.subplots_adjust(wspace=0, hspace=0)
+				for i in range(self.N_params):
+					plt.subplot(self.N_params, self.N_params, self.N_params * i + i + 1)
+					p.plot_marginal(i, with_ellipses = True, with_points = False, grid_points=50)
+					plt.ylabel("Probability")
 					plt.xlabel(self.Parameters[i])
-					plt.ylabel(self.Parameters[j])
-			plt.tight_layout()
-			if save_fig==True:
-				plt.savefig("{0}_{1}_post_dist.pdf".format(self.cluster,self.outbase_name),format='pdf')
-			else:
-				plt.show()
-		except FileNotFoundError:
-			print("Set-up not performed. Please run PyMultinest_setup.")		
+	
+					for j in range(i):
+						plt.subplot(self.N_params, self.N_params, self.N_params * j + i + 1)
+						#plt.subplots_adjust(left=0, bottom=0, right=0, top=0, wspace=0, hspace=0)
+						p.plot_conditional(i, j, with_ellipses = False, with_points = True, grid_points=30)
+						plt.xlabel(self.Parameters[i])
+						plt.ylabel(self.Parameters[j])
+				plt.tight_layout()
+				if save_fig==True:
+					plt.savefig("{0}_{1}_post_dist.pdf".format(self.cluster,self.outbase_name),format='pdf')
+				else:
+					plt.show()
+			except FileNotFoundError:
+				print("Set-up not performed. Please run PyMultinest_setup.")		
+		else:
+			print("Running membership on rank one.")	
 
 
 	def L_pm_GC_old(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
