@@ -122,8 +122,7 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		if done:
-			continue
+		print("Complete. Moving on.")
 
 	def L_pm_GC_old(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
@@ -330,5 +329,4 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		if done:
-			continue
+		print("Complete. Moving on.")

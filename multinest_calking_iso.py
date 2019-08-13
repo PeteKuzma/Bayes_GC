@@ -336,7 +336,6 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		if done:
-			continue
+		print("Complete. Moving on.")
 	
 	
