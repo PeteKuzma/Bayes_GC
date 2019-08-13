@@ -93,7 +93,7 @@ class PyMN_RUN(PyNM):
 			try:
 				a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename=self.outbase_name)
 				s = a.get_stats()
-				##plt.clf()
+				#plt.clf()
 				p = pymultinest.PlotMarginalModes(a)
 				plt.figure(figsize=(5*self.N_params, 5*self.N_params))
 				#plt.subplots_adjust(wspace=0, hspace=0)
@@ -115,9 +115,14 @@ class PyMN_RUN(PyNM):
 				else:
 					plt.show()
 			except FileNotFoundError:
-				print("Set-up not performed. Please run PyMultinest_setup.")		
+				print("Set-up not performed. Please run PyMultinest_setup.")
+			done=os.path.exists("{0}_{1}_post_dist.pdf".format(self.cluster,self.outbase_name))
+			for proc in range(1,nproc):
+				MPI.COMM_WORLD.send(done,dest=proc)
 		else:
-			print("Running membership on rank one.")	
+			print("Running membership on rank one.")
+			done = MPI.COMM_WORLD.recv(source=0)
+		if done:
 
 
 	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
@@ -325,6 +330,13 @@ class PyMN_RUN(PyNM):
 				#f_d7.write("{0}_mem_list_0_7.fits".format(self.cluster),format="fits",overwrite=True)
 			except FileNotFoundError:
 				print("Set-up not performed. Please run PyMultinest_setup.")
+			done=os.path.exists("{0}_mem_list_tot_{1}.fits".format(self.cluster,self.outbase_add))
+			for proc in range(1,nproc):
+				MPI.COMM_WORLD.send(done,dest=proc)
 		else:
 			print("Running membership on rank one.")
-
+			done = MPI.COMM_WORLD.recv(source=0)
+		if done:
+			continue
+	
+	
