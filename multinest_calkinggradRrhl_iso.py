@@ -42,7 +42,7 @@ import progressbar as PB
 import time as time
 import json
 from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10, arange, rad2deg, isnan,where
-# Ignore warnings from TAP queries
+# Ignore warnings from TAP queries0i
 from multinest_base import PyNM
 from mpi4py import MPI
 
@@ -53,7 +53,7 @@ class PyMN_RUN(PyNM):
 	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
-		self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
+		self.King=where(self.dist<=(1.06/60),self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),0)
 		self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
 		self.N_params = len(self.Parameters)
 
@@ -123,9 +123,6 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		if done:
-			continue
-	
 
 
 	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
@@ -245,7 +242,7 @@ class PyMN_RUN(PyNM):
 		cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
 		mc=(np.log(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
 		self.King+(1-fev)*fcl*\
-		where(self.dist>(1.06/60.),self.L_sat_quad_randone(self.x_ps,self.y_ps,the2,gam,k)*self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff),0)\
+		where(self.dist>(1.06/60.),self.L_sat_quad_randone(self.x_ps,self.y_ps,the2,gam,k),0)*self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
 		+self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
 		(1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
 		)).sum()
@@ -260,7 +257,7 @@ class PyMN_RUN(PyNM):
 		#gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
 		gcct=where(dist>(1.06/60.),self.L_sat_quad_randone(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
+		gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
 		mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
@@ -339,5 +336,4 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		if done:
-			continue
+

@@ -47,7 +47,7 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 # Definitions
 # ---------------------------------------------------
 class PyNM:
-	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
+	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		if outbase_add!=None:
 			self.outbase_add=outbase_add
 			self.outbase_name="{0}_{1}_pymn_out_".format(cluster,outbase_add)
@@ -109,18 +109,19 @@ class PyNM:
 		self.w_par=M2['w_iso']
 		self.tr=tr
 		self.cr=cr
+		self.lh=lh
 		self.dist=M2['dist']
 		#self.cv_raer=M2['ra_error']
 		#self.cv_deer=M2['dec_error']
 		#self.cv_radeccov=M2['ra_dec_corr']
-		print("Changing to PyMultinest output directory:\n{0}".format{self.outbase_name})
+		print("Changing to PyMultinest output directory:\n{0}".format(self.outbase_name))
 		try:
-            os.chdir(self.outbase_name)
+			os.chdir(self.outbase_name)
 		except FileNotFoundError:
-		    try:
-		        print("Output directory needs to be created. Creating now...")
-		        os.mkdir(self.outbase_name)
-		        os.chdir(self.outbase_name)
-            except FileExistsError:
-                print("created as part of another thread")
-                os.chdir(self.outbase_name)
+			try:
+				print("Output directory needs to be created. Creating now...")
+				os.mkdir(self.outbase_name)
+				os.chdir(self.outbase_name)
+			except FileExistsError:
+				print("created as part of the other thread.")
+				os.chdir(self.outbase_name)

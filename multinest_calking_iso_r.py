@@ -122,8 +122,6 @@ class PyMN_RUN(PyNM):
 		else:
 			print("Running membership on rank one.")
 			done = MPI.COMM_WORLD.recv(source=0)
-		print("Complete. Moving on.")
-
 
 	def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
 		'''
@@ -162,21 +160,6 @@ class PyMN_RUN(PyNM):
 		return mc
 
 
-	def L_sat_spat_PL(self,xt_g,yt_g,ah,rmin,rmax):
-		'''
-		Likelihood for the spatial distribution from the cluster based 
-		on a Plumber model and a constanct. The variables are:
-		xt_g = tangental projection of R.A.
-		yt_g = tangental projection of Dec.
-		ah = Half-light radii
-		c = constant for the background.
-		rmin = minimum radius in degrees
-		rmax = minimum radius in degrees
-		'''
-		r = sqrt(xt_g**2+yt_g**2)
-		mc = (r *ah*ah* (ah*ah+rmax*rmax))/\
-			(np.pi*rmax*rmax*((ah*ah+r*r)**2)) 		
-		return mc
 
 
 
@@ -256,7 +239,7 @@ class PyMN_RUN(PyNM):
 		x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam=\
 		cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
 		mc=(np.log(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-		where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
+		self.King+(1-fev)*fcl*\
 		self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
 		+self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
 		(1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
@@ -272,7 +255,7 @@ class PyMN_RUN(PyNM):
 		#gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
 		gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(dist<=self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),1e-99)
+		gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
 		mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
