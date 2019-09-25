@@ -281,7 +281,7 @@ class PyMN_RUN(PyNM):
 		mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
 		#tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
 		#x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-		tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps\
+		tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
 		x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
 		fcl=sample[:,8]
 		fev=sample[:,9]
