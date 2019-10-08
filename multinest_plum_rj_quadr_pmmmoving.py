@@ -271,8 +271,8 @@ class PyMN_RUN(PyNM):
 		x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc=\
 		cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16]
 		mc=(np.log(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-		where(dist<self.King+(1-fev)*fcl*\
-		self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
+		where(self.dist<self.lh,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
+		where(self.dist>=self.lh,self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k),0)*\
 		self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
 		+self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
 		(1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
@@ -285,10 +285,10 @@ class PyMN_RUN(PyNM):
 		'''
 		Calculates the membership probability for an individual star
 		'''
-		#gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
-		gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
+		gcct=where(dist>=self.lh,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
+		#gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
 		#gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-		gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
+		gcsp=where(dist<self.lh,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
 		gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
 		,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
 		mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
