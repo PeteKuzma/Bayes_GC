@@ -47,7 +47,7 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 # Definitions
 # ---------------------------------------------------
 class PyNM:
-	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
+	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		if outbase_add!=None:
 			self.outbase_add=outbase_add
 			self.outbase_name="{0}_{1}_pymn_out_".format(cluster,outbase_add)
@@ -111,6 +111,12 @@ class PyNM:
 		self.cr=cr
 		self.lh=lh
 		self.dist=M2['dist']
+		if survey=="gaia":
+		    self.gmag=M2['g_0']
+		elif survey=="PS1":
+		    self.gmag="i_R0"
+		else:
+		    break
 		#self.cv_raer=M2['ra_error']
 		#self.cv_deer=M2['dec_error']
 		#self.cv_radeccov=M2['ra_dec_corr']
