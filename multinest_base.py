@@ -114,7 +114,7 @@ class PyNM:
 		if survey=="gaia":
 		    self.gmag=M2['g_0']
 		elif survey=="PS1":
-		    self.gmag="i_R0"
+		    self.gmag=M2["i_R0"]
 		else:
 		    break
 		#self.cv_raer=M2['ra_error']
