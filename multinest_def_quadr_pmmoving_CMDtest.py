@@ -51,7 +51,7 @@ from mpi4py import MPI
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
+	def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
 		PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
 		self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
