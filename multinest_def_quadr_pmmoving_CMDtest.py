@@ -51,13 +51,13 @@ from mpi4py import MPI
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
-        PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
+    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
+        PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd_sigma","mw_skewmean","mw_skewness","mw_skewspread"]
         self.N_params = len(self.Parameters)
-
+        self.survey=survey
 
     def PyMultinest_run(self):
         print("Run PyMultiNest")
@@ -208,7 +208,7 @@ class PyMN_RUN(PyNM):
         a,b and c = 
         g_mag = dereddened g-magnitude
         '''
-        likelihood = np.log(1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.)))).sum()
+        likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
         return likelihood
 
     def L_cmd_MW(self,skewmean,skewsig,skewness,w_iso):
@@ -219,7 +219,7 @@ class PyMN_RUN(PyNM):
         a,b and c = 
         g_mag = dereddened g-magnitude
         '''
-        likelihood = np.log(skewnorm.pdf(w_iso,skewness,loc=skewmean,scale=skewsig)).sum()
+        likelihood = skewnorm.pdf(w_iso,skewness,loc=skewmean,scale=skewsig)
         return likelihood
 
 
@@ -280,15 +280,15 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,sigcmd,skmean,skness,skspead,=\
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,sigcmd,skmean,skness,skspead=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18],cube[19],cube[20]
-        mc=(np.log(self.L_cmd_cl(sigcmd,w_par,mag)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        mc=(np.log(self.L_cmd_cl(sigcmd,self.w_par,self.gmag)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
-        *self.L_cmd_MW(skmean,skspead,skness,w_iso))).sum()
+        *self.L_cmd_MW(skmean,skspead,skness,self.w_par))).sum()
         return mc
 
 
@@ -314,7 +314,7 @@ class PyMN_RUN(PyNM):
         mwcmd=self.L_cmd_MW(sample[:,18],sample[:,20],sample[:,19],w_par)
         fcl=sample[:,8]
         fev=sample[:,9]
-        mc_cl=((gccmd*(fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
+        mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
         (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
         (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
@@ -352,9 +352,9 @@ class PyMN_RUN(PyNM):
                 cv_pmdecer=f_data['pmdec_error']
                 cv_coeff=f_data['pmra_pmdec_corr']
                 w_par=f_data['w_iso']
-                if survey=="PS1":
+                if self.survey=="PS1":
                     mag=f_data["i_R0"]
-                elif survey=="gaia":
+                elif self.survey=="gaia":
                     mag=f_data["g_0"]
                 else:
                     print("BAD")

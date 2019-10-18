@@ -116,7 +116,7 @@ class PyNM:
 		elif survey=="PS1":
 		    self.gmag=M2["i_R0"]
 		else:
-		    break
+		    print("NO SURVEY")
 		#self.cv_raer=M2['ra_error']
 		#self.cv_deer=M2['dec_error']
 		#self.cv_radeccov=M2['ra_dec_corr']
