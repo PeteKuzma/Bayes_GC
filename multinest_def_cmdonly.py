@@ -55,7 +55,7 @@ class PyMN_RUN(PyNM):
         PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd_sigma","mw_skewmean","mw_skewness","mw_skewspread"]
+        self.Parameters=["f_cl","f_ev","cmd_sigma","mw_skewmean","mw_skewness","mw_skewspread"]
         self.N_params = len(self.Parameters)
         self.survey=survey
         self.plumer=where(self.dist<=tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)
@@ -294,14 +294,13 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,sigcmd,skmean,skness,skspead=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18],cube[19],cube[20]
+        fcl,fev,sigcmd,skmean,skness,skspead=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5]
         mc=(np.log(self.L_cmd_cl(sigcmd,self.w_par,self.gmag)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         self.plumer+(1-fev)*fcl*\
-        self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
-        self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
-        +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
-        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
+        )\
+        +\
+        (1-fcl)*\
         *self.L_cmd_MW(skmean,skspead,skness,self.w_par))).sum()
         return mc
 
@@ -312,30 +311,30 @@ class PyMN_RUN(PyNM):
         Calculates the membership probability for an individual star
         '''
         #gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
-        gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
+        #gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
         #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
         #gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
         gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
-        gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
-        ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
-        ,sample[:,7],x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
+        #gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
+        #,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
+        #mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
+        #,sample[:,7],x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
+        #mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
         #tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
-        x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        gccmd=self.L_cmd_cl(sample[:,17],w_par,mag)
-        mwcmd=self.L_cmd_MW(sample[:,18],sample[:,20],sample[:,19],w_par)
-        fcl=sample[:,8]
-        fev=sample[:,9]
-        mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
-        (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
-        mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
-        (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
-        mc_ts=(gccmd*fcl*(1-fev)*tspm*gcct)/\
-       (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
-        return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_co),np.nanstd(mc_co),np.nanmean(mc_ts),np.nanstd(mc_ts)
+        #tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
+        #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
+        gccmd=self.L_cmd_cl(sample[:,2],w_par,mag)
+        mwcmd=self.L_cmd_MW(sample[:,3],sample[:,5],sample[:,4],w_par)
+        fcl=sample[:,0]
+        fev=sample[:,1]
+        mc_cl=(gccmd*((fcl*fev)*gcsp+(fcl*(1-fev))))/\
+        (gccmd*(fcl*fev*gcsp+(fcl*(1-fev)))+(1-fcl*fev-fcl*(1-fev))*mwcmd))
+       # mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
+        #(gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
+        #mc_ts=(gccmd*fcl*(1-fev)*tspm*gcct)/\
+       #(gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
+        return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_cl),np.nanstd(mc_cl)
 
 
     def Membership_after_PyNM(self,sample_size,rad,gnom=True):
