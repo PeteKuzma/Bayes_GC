@@ -305,7 +305,7 @@ class PyMN_RUN(PyNM):
         )\
         +\
         (1-fcl)*\
-        *self.L_cmd_mb(skmean,skspead,skness,self.w_par))).sum()
+        *self.L_cmd_mb(self.w_par,self.g_mag,ol_mean,ol_spread,self.colerr))).sum()
         return mc
 
 
