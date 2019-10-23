@@ -214,26 +214,29 @@ class PyMN_RUN(PyNM):
         return a*np.exp(b*x)+c
     
     
-    def L_cmd_cl(self,b,w_par,g_mag):
+    def L_cmd_cl(w_par,g_mag,colerr):
         '''
-        sig_g = estimating the spread of the cluster distribution 
+        sig_g = estimating the spread of the cluster distribution
         from the w-parameter.
         w_par = w_iso limit
-        a,b and c = 
+        a,b and c =
         g_mag = dereddened g-magnitude
         '''
-        likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
+        likelihood=norm.pdf(w_par,0,colerr)
+        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
         return likelihood
 
-    def L_cmd_MW(self,skewmean,skewsig,skewness,w_iso):
+
+    def L_cmd_mb(w_par,g_mag,ol_mean,ol_spread,colerr):
         '''
-        sig_g = estimating the spread of the cluster distribution 
+        sig_g = estimating the spread of the cluster distribution
         from the w-parameter.
         w_par = w_iso limit
-        a,b and c = 
+        a,b and c =
         g_mag = dereddened g-magnitude
         '''
-        likelihood = skewnorm.pdf(w_iso,skewness,loc=skewmean,scale=skewsig)
+        likelihood=norm.pdf(w_par,ol_mean,sqrt(colerr*colerr+ol_spread))
+        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
         return likelihood
 
 
