@@ -113,8 +113,12 @@ class PyNM:
 		self.dist=M2['dist']
 		if survey=="gaia":
 		    self.gmag=M2['g_0']
+			self.w_par=self.w_par*sqrt(M2['bp_err']*M2['bp_err']+M2['rp_err']*M2['rp_err'])
+			self.colerr=sqrt(M2['bp_err']*M2['bp_err']+M2['rp_err']*M2['rp_err'])
 		elif survey=="PS1":
 		    self.gmag=M2["i_R0"]
+			self.w_par=self.w_par*sqrt(M2['e_gmag']*M2['e_gmag']+M2['e_imag']*M2['e_imag'])
+			self.colerr=sqrt(M2['e_gmag']*M2['e_gmag']+M2['e_imag']*M2['e_imag'])			
 		else:
 		    print("NO SURVEY")
 		#self.cv_raer=M2['ra_error']

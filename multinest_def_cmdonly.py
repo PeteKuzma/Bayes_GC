@@ -60,6 +60,7 @@ class PyMN_RUN(PyNM):
         self.survey=survey
         self.plumer=where(self.dist<=tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)
 
+
     def PyMultinest_run(self):
         print("Run PyMultiNest")
         try:
@@ -299,12 +300,12 @@ class PyMN_RUN(PyNM):
     def loglike_ndisp(self,cube, ndim, nparams):
         fcl,fev,sigcmd,skmean,skness,skspead=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5]
-        mc=(np.log(self.L_cmd_cl(sigcmd,self.w_par,self.gmag)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        mc=(np.log(self.L_cmd_cl(self.w_par,self.gmag,self.colerr)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         self.plumer+(1-fev)*fcl*\
         )\
         +\
         (1-fcl)*\
-        *self.L_cmd_MW(skmean,skspead,skness,self.w_par))).sum()
+        *self.L_cmd_mb(skmean,skspead,skness,self.w_par))).sum()
         return mc
 
 
