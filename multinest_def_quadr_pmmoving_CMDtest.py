@@ -55,7 +55,7 @@ class PyMN_RUN(PyNM):
         PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd,mw_mean","cmd,mw_spread"]
+        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd,mw_mean","cmd,mw_spread","cmd,cl_spread"]
         self.N_params = len(self.Parameters)
         self.survey=survey
 
@@ -178,21 +178,21 @@ class PyMN_RUN(PyNM):
         return mc
 
 
-	def L_sat_spat_PL(self,xt_g,yt_g,ah,rmin,rmax):
-		'''
-		Likelihood for the spatial distribution from the cluster based 
-		on a Plumber model and a constanct. The variables are:
-		xt_g = tangental projection of R.A.
-		yt_g = tangental projection of Dec.
-		ah = Half-light radii
-		c = constant for the background.
-		rmin = minimum radius in degrees
-		rmax = minimum radius in degrees
-		'''
-		r = sqrt(xt_g**2+yt_g**2)
-		mc = (r *ah*ah* (ah*ah+rmax*rmax))/\
-			(np.pi*rmax*rmax*((ah*ah+r*r)**2)) 		
-		return mc
+    def L_sat_spat_PL(self,xt_g,yt_g,ah,rmin,rmax):
+        '''
+        Likelihood for the spatial distribution from the cluster based 
+        on a Plumber model and a constanct. The variables are:
+        xt_g = tangental projection of R.A.
+        yt_g = tangental projection of Dec.
+        ah = Half-light radii
+        c = constant for the background.
+        rmin = minimum radius in degrees
+        rmax = minimum radius in degrees
+        '''
+        r = sqrt(xt_g**2+yt_g**2)
+        mc = (r *ah*ah* (ah*ah+rmax*rmax))/\
+        (np.pi*rmax*rmax*((ah*ah+r*r)**2)) 		
+        return mc
 
 
     def L_sat_king(self,xt_g,yt_g,ah,rt):
@@ -214,30 +214,30 @@ class PyMN_RUN(PyNM):
         return a*np.exp(b*x)+c
     
     
-     def L_cmd_cl(w_par,g_mag,colerr):
-        '''
-        sig_g = estimating the spread of the cluster distribution
-        from the w-parameter.
-        w_par = w_iso limit
-        a,b and c =
-        g_mag = dereddened g-magnitude
-        '''
-        likelihood=norm.pdf(w_par,0,colerr)
-        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
-        return likelihood
+    def L_cmd_cl(self,w_par,g_mag,colerr,cl_spread):
+       '''
+       sig_g = estimating the spread of the cluster distribution
+       from the w-parameter.
+       w_par = w_iso limit
+       a,b and c =
+       g_mag = dereddened g-magnitude
+       '''
+       likelihood=norm.pdf(w_par,0,cl_spread)
+       #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
+       return likelihood
 
 
-    def L_cmd_mb(w_par,g_mag,ol_mean,ol_spread,colerr):
-        '''
-        sig_g = estimating the spread of the cluster distribution
-        from the w-parameter.
-        w_par = w_iso limit
-        a,b and c =
-        g_mag = dereddened g-magnitude
-        '''
-        likelihood=norm.pdf(w_par,ol_mean,sqrt(colerr*colerr+ol_spread))
-        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
-        return likelihood
+    def L_cmd_mb(self,w_par,g_mag,ol_mean,ol_spread,colerr):
+       '''
+       sig_g = estimating the spread of the cluster distribution
+       from the w-parameter.
+       w_par = w_iso limit
+       a,b and c =
+       g_mag = dereddened g-magnitude
+       '''
+       likelihood=norm.pdf(w_par,ol_mean,sqrt(colerr*colerr+ol_spread))
+       #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
+       return likelihood
 
 
 
@@ -297,16 +297,16 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,ol_mean,ol_spread=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18]
-        mc=(np.log(self.L_cmd_cl(sigcmd,self.w_par,self.gmag,self.colerr)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-       # where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,ol_mean,ol_spread,cl_spread=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18],cube[19]
+        mc=(np.log(self.L_cmd_cl(self.w_par,self.gmag,self.colerr,cl_spread)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
-        *self.L_cmd_mb(self.w_par,self.g_mag,ol_mean,ol_spread,self.colerr))).sum()
+        *self.L_cmd_mb(self.w_par,self.gmag,ol_mean,ol_spread,self.colerr))).sum()
         return mc
 
 
@@ -329,7 +329,7 @@ class PyMN_RUN(PyNM):
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        gccmd=self.L_cmd_cl(w_par,mag,colerr)
+        gccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19])
         mwcmd=self.L_cmd_mb(w_par,mag,sample[:,17],sample[:,18],colerr)
         fcl=sample[:,8]
         fev=sample[:,9]
@@ -373,10 +373,10 @@ class PyMN_RUN(PyNM):
                 w_par=f_data['w_iso']
                 if self.survey=="PS1":
                     mag=f_data["i_R0"]
-                    colerr=sqrt(f_data['e_gmag']*f_data['e_gmag']+f_data['e_imag']*f_data['e_imag']
+                    colerr=sqrt(f_data['e_gmag']*f_data['e_gmag']+f_data['e_imag']*f_data['e_imag'])
                 elif self.survey=="gaia":
                     mag=f_data["g_0"]
-                    colerr=sqrt(f_data['bp_err']*f_data['bp_err']+f_data['rp_err']*f_data['rp_err']
+                    colerr=sqrt(f_data['bp_err']*f_data['bp_err']+f_data['rp_err']*f_data['rp_err'])
                 else:
                     print("BAD")
                 #self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
