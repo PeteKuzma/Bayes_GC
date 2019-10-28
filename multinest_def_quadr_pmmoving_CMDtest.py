@@ -191,7 +191,7 @@ class PyMN_RUN(PyNM):
         '''
         r = sqrt(xt_g**2+yt_g**2)
         mc = (r *ah*ah* (ah*ah+rmax*rmax))/\
-        (np.pi*rmax*rmax*((ah*ah+r*r)**2)) 		
+        (np.pi*rmax*rmax*((ah*ah+r*r)**2))         
         return mc
 
 
@@ -222,7 +222,8 @@ class PyMN_RUN(PyNM):
        a,b and c =
        g_mag = dereddened g-magnitude
        '''
-       likelihood=where(((pmra=<(pra+pmsel))&(pmra=>(pra-pmsel))&(pmdec=<(pde+pmsel))&(pmdec=>(pde-pmsel))&(R>=rin)&(R<=rout)),norm.pdf(w_par,0,cl_spread),0)
+       likelihood=where((pmra<=(pra+pmsel))&(pmra>=(pra-pmsel))&(pmdec<=(pde+pmsel))\
+                         &(pmdec>=(pde-pmsel))&(R>=rin)&(R<=rout),norm.pdf(w_par,0,cl_spread),0)
        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
        return likelihood
 
@@ -347,12 +348,12 @@ class PyMN_RUN(PyNM):
         tsccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19])
         fcl=sample[:,8]
         fev=sample[:,9]
-        mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
-        (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
+        mc_cl=(gccmd*(fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct*tsccmd))/\
+        (((gccmd*fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)*tsccmd)+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
-        (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
-        mc_ts=(gccmd*fcl*(1-fev)*tspm*gcct)/\
-       (gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)
+        (((gccmd*fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)*tsccmd)+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
+        mc_ts=(tsccmd*fcl*(1-fev)*tspm*gcct)/\
+        (((gccmd*fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)*tsccmd)+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_co),np.nanstd(mc_co),np.nanmean(mc_ts),np.nanstd(mc_ts)
 
 
@@ -426,4 +427,4 @@ class PyMN_RUN(PyNM):
             done = MPI.COMM_WORLD.recv(source=0)
         print("Complete. Moving on.")
     
-    
+  
