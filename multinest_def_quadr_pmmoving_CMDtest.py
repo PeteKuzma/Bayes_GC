@@ -44,15 +44,15 @@ import time as time
 import json
 from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10, arange, rad2deg, isnan,where
 # Ignore warnings from TAP queries
-from multinest_base import PyNM
+from multinest_baseCMD_test import PyNM
 from mpi4py import MPI
 
 # ---------------------------------------------------
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None):
-        PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add)
+    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
+        PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd,mw_mean","cmd,mw_spread","cmd,cl_spread"]
@@ -214,7 +214,19 @@ class PyMN_RUN(PyNM):
         return a*np.exp(b*x)+c
     
     
-    def L_cmd_cl(self,w_par,g_mag,colerr,cl_spread):
+    def L_cmd_cl(self,w_par,g_mag,colerr,cl_spread,pmra,pmdec,R,pra,pde,rin,rout,pmsel):
+       '''
+       sig_g = estimating the spread of the cluster distribution
+       from the w-parameter.
+       w_par = w_iso limit
+       a,b and c =
+       g_mag = dereddened g-magnitude
+       '''
+       likelihood=where(((pmra=<(pra+pmsel))&(pmra=>(pra-pmsel))&(pmdec=<(pde+pmsel))&(pmdec=>(pde-pmsel))&(R>=rin)&(R<=rout)),norm.pdf(w_par,0,cl_spread),0)
+       #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
+       return likelihood
+
+    def L_cmd_TS(self,w_par,g_mag,colerr,cl_spread):
        '''
        sig_g = estimating the spread of the cluster distribution
        from the w-parameter.
@@ -225,7 +237,6 @@ class PyMN_RUN(PyNM):
        likelihood=norm.pdf(w_par,0,cl_spread)
        #likelihood = (1./(sqrt(2*pi*(exp(g_mag*b)**2)))*exp(-(w_par**2/(2.*(exp(g_mag*b))**2.))))
        return likelihood
-
 
     def L_cmd_mb(self,w_par,g_mag,ol_mean,ol_spread,colerr):
        '''
@@ -299,10 +310,12 @@ class PyMN_RUN(PyNM):
     def loglike_ndisp(self,cube, ndim, nparams):
         x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,ol_mean,ol_spread,cl_spread=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18],cube[19]
-        mc=(np.log(self.L_cmd_cl(self.w_par,self.gmag,self.colerr,cl_spread)*(self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        mc=(np.log((self.L_cmd_cl(self.w_par,self.gmag,self.colerr,cl_spread,self.x_pm,self.y_pm,self.dist,self.pmra,self.pmdec,self.clcut,self.lh,self.psel)*\
+        self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
+        self.L_cmd_TS(self.w_par,self.gmag,self.colerr,cl_spread)*\
         self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
@@ -329,8 +342,9 @@ class PyMN_RUN(PyNM):
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        gccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19])
+        gccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19],x_pm,y_pm,dist,self.pmra,self.pmdec,self.clcut,self.lh,self.psel)
         mwcmd=self.L_cmd_mb(w_par,mag,sample[:,17],sample[:,18],colerr)
+        tsccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19])
         fcl=sample[:,8]
         fev=sample[:,9]
         mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
