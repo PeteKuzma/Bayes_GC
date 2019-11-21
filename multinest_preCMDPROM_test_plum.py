@@ -345,8 +345,8 @@ class PyMN_RUN(PyNM):
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        gccmd=norm.pdf(w_par,0,self.pmra*exp(self.pmdec*mag)+self.clcut)
-        mwcmd=self.L_cmd_mb(w_par,mag,sample[:,17],sample[:,18],colerr)
+        gccmd=prcl
+        mwcmd=prmw
         fcl=sample[:,8]
         fev=sample[:,9]
         mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))/\
@@ -387,15 +387,12 @@ class PyMN_RUN(PyNM):
                 cv_pmdecer=f_data['pmdec_error']
                 cv_coeff=f_data['pmra_pmdec_corr']
                 w_par=f_data['w_iso']
-                dist=f_data['dist']
                 if self.survey=="PS1":
                     mag=f_data["i_R0"]
-                    colerr=sqrt(f_data['e_gmag']/f_data['e_gmag'])#+f_data['e_imag']*f_data['e_imag'])
-                    #colerr=np.ones(np.shape(w_par),1)
+                    colerr=sqrt(f_data['e_gmag']*f_data['e_gmag']+f_data['e_imag']*f_data['e_imag'])
                 elif self.survey=="gaia":
                     mag=f_data["g_0"]
-                    colerr=sqrt(f_data['bp_err']/f_data['bp_err'])#+f_data['rp_err']*f_data['rp_err'])
-                    #colerr=np.ones(np.shape(w_par))
+                    colerr=sqrt(f_data['bp_err']*f_data['bp_err']+f_data['rp_err']*f_data['rp_err'])
                 else:
                     print("BAD")
                 #self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
@@ -406,7 +403,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,dist[j],mag[j],colerr[j])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],mag[j],colerr[j],self.PCMD_CL[j],self.PCMD_MW[j])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]
@@ -432,3 +429,4 @@ class PyMN_RUN(PyNM):
         print("Complete. Moving on.")
     
   
+
