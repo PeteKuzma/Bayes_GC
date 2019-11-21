@@ -327,7 +327,7 @@ class PyMN_RUN(PyNM):
 
 
 
-    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,mag,colerr):
+    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,mag,colerr,prcl,prmw):
         '''
         Calculates the membership probability for an individual star
         '''
