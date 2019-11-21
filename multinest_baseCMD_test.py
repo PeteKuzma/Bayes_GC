@@ -120,6 +120,7 @@ class PyNM:
         self.cr=cr
         self.lh=lh
         self.dist=M2['dist']
+        self.M2=M2
         if survey=="gaia":
             self.gmag=M2['g_0']
             #self.w_par=self.w_par*sqrt(M2['bp_err']*M2['bp_err']+M2['rp_err']*M2['rp_err'])
