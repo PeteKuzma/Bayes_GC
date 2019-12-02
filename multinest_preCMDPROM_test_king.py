@@ -63,12 +63,12 @@ class PyMN_RUN(PyNM):
         self.phot=phot
         self.survey=survey
 
-    def PyMultinest_run(self):
+    def PyMultinest_run(self,resume=False):
         print("Run PyMultiNest")
         try:
             tstart=time.time()
             pymultinest.run(self.loglike_ndisp, self.Prior, self.N_params,outputfiles_basename=self.outbase_name, \
-            resume = False, verbose = True,n_live_points=self.Live_Points)
+            resume = resume, verbose = True,n_live_points=self.Live_Points)
             json.dump(self.Parameters, open("{0}_params.json".format(self.outbase_name), 'w')) # save parameter names
             tend=time.time()
             print("time taken: {0}".format(tend-tstart))
