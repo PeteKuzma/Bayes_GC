@@ -76,15 +76,30 @@ class PyNM:
             M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
             M2=M2[np.isnan(M2['w_iso'])==False]
         if select==False:
-            print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
-            hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-            M2_d=Table(hdu3[1].data)
+            try:
+                print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
+                hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
+                M2_d=Table(hdu3[1].data)
+            except MemoryError:
+                print("Memory error. Reloading")
+                hdu3.close()
+                del hdu3
+                #del M2_d
+                hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
+                M2_d=Table(hdu3[1].data)
             M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
             M2=M2[np.isnan(M2['w_iso'])==False]    
         else:
             print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
             hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
             M2_d=Table(hdu3[1].data)
+            #except MemoryError:
+             #   hdu3.close()
+              #  del hdu3
+                #del M2_d
+               # print("Memory error. Reloading. \n".format(self.cluster))
+               # hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
+               # M2_d=Table(hdu3[1].data)
             M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
             M2=M2[np.isnan(M2['w_iso'])==False]
         if select==True and existing==False:
@@ -98,10 +113,10 @@ class PyNM:
             M2=M2
         M2=M2[M2['dist']>=self.rmin]
         M2=M2[M2['dist']<=rmax]
-        if survey=="gaia":
-            M2=M2[(M2['bp_0']-M2['rp_0'])<1.6]
-        if survey=="PS1":
-            M2=M2[(M2['g_R0']-M2['i_R0'])<1.6]
+        #if survey=="gaia":
+        #    M2=M2[(M2['bp_0']-M2['rp_0'])<1.6]
+        #if survey=="PS1":
+        #    M2=M2[(M2['g_R0']-M2['i_R0'])<1.6]
         self.x_ps=M2['ra_g'] # Spatial position in x_projection.
         self.y_ps=M2['dec_g'] # Spatial position in y_projection.
         if pm_sel=="norm":
@@ -121,18 +136,20 @@ class PyNM:
         self.lh=lh
         self.dist=M2['dist']
         self.M2=M2
-        if survey=="gaia":
-            self.gmag=M2['g_0']
+        hdu3.close()
+        del M2
+	#if survey=="gaia":
+         #   self.gmag=M2['g_0']
             #self.w_par=self.w_par*sqrt(M2['bp_err']*M2['bp_err']+M2['rp_err']*M2['rp_err'])
             #self.colerr=sqrt(M2['bp_err']*M2['bp_err']+M2['rp_err']*M2['rp_err'])
-            self.w_par=self.w_par
-            self.colerr=np.ones(np.shape(self.w_par))
-        elif survey=="PS1":
-            self.gmag=M2["i_R0"]
-            self.w_par=self.w_par
-            self.colerr=np.ones(np.shape(self.w_par))            
-        else:
-            print("NO SURVEY")
+          #  self.w_par=self.w_par
+           # self.colerr=np.ones(np.shape(self.w_par))
+        #elif survey=="PS1":
+         #   self.gmag=M2["i_R0"]
+          #  self.w_par=self.w_par
+          #  self.colerr=np.ones(np.shape(self.w_par))            
+        #else:
+         #   print("NO SURVEY")
         #self.cv_raer=M2['ra_error']
         #self.cv_deer=M2['dec_error']
         #self.cv_radeccov=M2['ra_dec_corr']

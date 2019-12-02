@@ -213,7 +213,7 @@ class PyMN_RUN(PyNM):
 		mc=nom/dem
 		return mc
 
-	def L_sat_quad_const(self,xt_g,yt_g,the,gam=0,b):
+	def L_sat_quad_const(self,xt_g,yt_g,the,gam,b):
 		r=sqrt(xt_g*xt_g+yt_g*yt_g)
 		theta=np.arctan2(yt_g,xt_g)
 		nom=(-2+gam)*(r**(1-gam))*(b+2*r**gam+b*np.cos(2*the-2*theta))

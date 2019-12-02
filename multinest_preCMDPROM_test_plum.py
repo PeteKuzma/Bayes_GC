@@ -54,12 +54,14 @@ class PyMN_RUN(PyNM):
     def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
         PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
-        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
+        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),0)
+        self.Plummer=where(self.dist<=self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const"]
         self.N_params = len(self.Parameters)
         self.survey=survey
         self.PCMD_CL=self.M2['p_cmdM']
         self.PCMD_MW=self.M2['p_cmdC']
+        self.phot=phot
 
 
     def PyMultinest_run(self):
@@ -316,7 +318,7 @@ class PyMN_RUN(PyNM):
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16]
         mc=(np.log(self.PCMD_CL*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-        where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
+        self.Plummer+(1-fev)*fcl*\
         #self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
@@ -335,7 +337,7 @@ class PyMN_RUN(PyNM):
         gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
         #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
         #gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
-        gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
+        gcsp=where(dist<=self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
         gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
         ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
