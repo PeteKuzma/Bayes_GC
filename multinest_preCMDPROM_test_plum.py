@@ -64,7 +64,7 @@ class PyMN_RUN(PyNM):
         self.phot=phot
 
 
-    def PyMultinest_run(self):
+    def PyMultinest_run(self,resume=False):
         print("Run PyMultiNest")
         try:
             tstart=time.time()
