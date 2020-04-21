@@ -54,6 +54,7 @@ class PyNM:
         else:
             self.outbase_name="{0}_pymn_out_".format(cluster)
         self.rad_sel=radius
+	#self.resume=resume
         self.cluster=cluster
         self.cluster_F=cluster
         self.Prior=prior
