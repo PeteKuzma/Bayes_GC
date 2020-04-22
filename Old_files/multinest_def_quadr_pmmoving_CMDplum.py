@@ -46,26 +46,22 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 # Ignore warnings from TAP queries
 from multinest_baseCMD_test import PyNM
 from mpi4py import MPI
-import corner
 
 # ---------------------------------------------------
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,pmcsel,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
+    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
         PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
-        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),0)
-        self.Plummer=where(self.dist<=tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const"]
+        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
+        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","xpm_const","ypm_const","cmd,mw_mean","cmd,mw_spread"]
         self.N_params = len(self.Parameters)
         self.survey=survey
-        self.PCMD_CL=self.M2['p_cmdC']
-        self.PCMD_MW=self.M2[pmcsel]
-        self.phot=phot
+        #self.cmd_cl=norm.pdf(self.w_par,0,((self.pmra*exp(self.pmdec*self.gmag)+self.clcut)/2))
+        self.cmd_cl=norm.pdf(self.w_par,0,(10**pmra*self.gmag**pmdec))
 
-
-    def PyMultinest_run(self,resume=False):
+    def PyMultinest_run(self):
         print("Run PyMultiNest")
         try:
             tstart=time.time()
@@ -81,11 +77,9 @@ class PyMN_RUN(PyNM):
         try:
             result = pymultinest.solve(LogLikelihood=self.loglike_ndisp, Prior=self.Prior, 
             n_dims=self.N_params, outputfiles_basename=self.outbase_name, verbose=True,n_live_points=self.Live_Points)
-            f=open("{0}_parameter_summary.txt".format(self.outbase_name),'w')
             print('parameter values:')
             for name, col in zip(self.Parameters, result['samples'].transpose()):
-                print('%15s : %.5f +- %.5f' % (name, col.mean(), col.std()))
-                f.write('%15s : %.5f +- %.5f \n' % (name, col.mean(), col.std()))
+                print('%15s : %.3f +- %.3f' % (name, col.mean(), col.std()))
         except FileNotFoundError:
             print("Set-up not performed. Please run PyMultinest_setup.")
         
@@ -131,54 +125,6 @@ class PyMN_RUN(PyNM):
         else:
             print("Running membership on rank one.")
             done = MPI.COMM_WORLD.recv(source=0)
-
-
-    def PyMultinest_plots_corner(self,setup="complete",save_fig=True):
-        try:
-            from mpi4py import MPI
-            rank = MPI.COMM_WORLD.Get_rank()
-            nproc = MPI.COMM_WORLD.Get_size()
-
-        except ImportError:
-            rank = 0
-            nproc = 1
-        if rank==0:
-            try:
-                a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename=self.outbase_name)
-                s = a.get_stats()
-                #plt.clf()
-                data = a.get_data()[:,2:]
-                weights = a.get_data()[:,0]
-                mask = weights > 1e-4
-                modes = s['modes']
-                parameters=["$\mu_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu_{\\xi},cl}$",\
-                "$\sigma_{\mu_{\eta},cl}$","$\mu_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu_{\\i},MW}$",\
-                "$\sigma_{\mu_{\eta},MW}$","$f_{cl}$","$f_{ex}$","$\\theta_{MW}$",\
-                "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$","$\Delta\mu_{\\xi,cl}$","$\Delta\mu_{\eta,cl}$"]
-                figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=False)
-                axes = np.array(figure.axes).reshape((self.N_params, self.N_params))
-                for i in range(self.N_params):
-                	m = s['marginals'][i]
-                	ax = axes[i, i]
-                	ax.set_title("{0}".format(parameters[i]))
-                	ylim = ax.get_ylim()
-                	y = min(ylim) +max(ylim)/10
-                	center = m['median']
-                	low1, high1 = m['1sigma']
-                	ax.errorbar(x=center, y=y,xerr=np.transpose([[center - low1, high1 - center]]),color='red', linewidth=2, marker='s')
-                if save_fig==True:
-                    plt.savefig("{0}_{1}_post_corner.pdf".format(self.cluster,self.outbase_name),format='pdf')
-                else:
-                    plt.show()
-            except FileNotFoundError:
-                print("Set-up not performed. Please run PyMultinest_setup.")
-            done=os.path.exists("{0}_{1}_post_corner.pdf".format(self.cluster,self.outbase_name))
-            for proc in range(1,nproc):
-                MPI.COMM_WORLD.send(done,dest=proc)
-        else:
-            print("Running membership on rank one.")
-            done = MPI.COMM_WORLD.recv(source=0)
-
 
     def L_pm_GC(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
         '''
@@ -366,23 +312,22 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16]
-        mc=(self.PCMD_CL*(\
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,pmxc,pmyc,ol_mean,ol_spread=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15],cube[16],cube[17],cube[18]
+        mc=(np.log(self.cmd_cl*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-        self.Plummer+(1-fev)*fcl*\
+        where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
+        #self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
-        *self.PCMD_MW)
-        mc=np.where(mc>0,mc,1e-99)
-        mc=np.log(mc).sum()
+        *self.L_cmd_mb(self.w_par,self.gmag,ol_mean,ol_spread,self.colerr))).sum()
         return mc
 
 
 
-    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,prcl,prmw):
+    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,mag,colerr):
         '''
         Calculates the membership probability for an individual star
         '''
@@ -390,7 +335,7 @@ class PyMN_RUN(PyNM):
         gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
         #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
         #gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
-        gcsp=where(dist<=self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),1e-99)
+        gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
         gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
         ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         mwpm=self.L_pm_MW(sample[:,4],sample[:,5],sample[:,6]\
@@ -400,8 +345,8 @@ class PyMN_RUN(PyNM):
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,15],sample[:,16],x_ps,y_ps,\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        gccmd=prcl
-        mwcmd=prmw
+        gccmd=norm.pdf(w_par,0,self.pmra*exp(self.pmdec*mag)+self.clcut)
+        mwcmd=self.L_cmd_mb(w_par,mag,sample[:,17],sample[:,18],colerr)
         fcl=sample[:,8]
         fev=sample[:,9]
         mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))/\
@@ -427,7 +372,7 @@ class PyMN_RUN(PyNM):
             nproc = 1
         if rank==0:
             try:
-                f_in=fits.open("../{0}_bays_ready.fits".format(self.cluster))
+                f_in=fits.open("../{0}_bays_ready_FULL.fits".format(self.cluster))
                 f_data=Table(f_in[1].data)
                 f_data=f_data[f_data['dist']<=self.rmax]
                 x_ps=f_data['ra_g']
@@ -442,6 +387,17 @@ class PyMN_RUN(PyNM):
                 cv_pmdecer=f_data['pmdec_error']
                 cv_coeff=f_data['pmra_pmdec_corr']
                 w_par=f_data['w_iso']
+                dist=f_data['dist']
+                if self.survey=="PS1":
+                    mag=f_data["i_R0"]
+                    colerr=sqrt(f_data['e_gmag']/f_data['e_gmag'])#+f_data['e_imag']*f_data['e_imag'])
+                    #colerr=np.ones(np.shape(w_par),1)
+                elif self.survey=="gaia":
+                    mag=f_data["g_0"]
+                    colerr=sqrt(f_data['bp_err']/f_data['bp_err'])#+f_data['rp_err']*f_data['rp_err'])
+                    #colerr=np.ones(np.shape(w_par))
+                else:
+                    print("BAD")
                 #self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
                 a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename= self.outbase_name)
                 RWE=a.get_data()
@@ -450,7 +406,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],self.PCMD_CL[j],self.PCMD_MW[j])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,dist[j],mag[j],colerr[j])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]
@@ -476,4 +432,3 @@ class PyMN_RUN(PyNM):
         print("Complete. Moving on.")
     
   
-

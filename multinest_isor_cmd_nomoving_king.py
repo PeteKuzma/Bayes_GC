@@ -381,7 +381,7 @@ class PyMN_RUN(PyNM):
 
 
 
-    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,mag,colerr,prcl,prmw):
+    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,prcl,prmw):
         '''
         Calculates the membership probability for an individual star
         '''
@@ -427,15 +427,9 @@ class PyMN_RUN(PyNM):
             nproc = 1
         if rank==0:
             try:
-                f_in=fits.open("../{0}_bays_ready_FULL.fits".format(self.cluster))
+                f_in=fits.open("../{0}_bays_ready.fits".format(self.cluster))
                 f_data=Table(f_in[1].data)
                 f_data=f_data[f_data['dist']<=self.rmax]
-                if self.survey=="PS1":
-                    f_data=f_data[(f_data['g_R0']-f_data['i_R0'])<self.phot]
-                if self.survey=="gaia":
-                    f_data=f_data[(f_data['bp_0']-f_data['rp_0'])<self.phot]
-                else:
-                    ValueError
                 x_ps=f_data['ra_g']
                 y_ps=f_data['dec_g']
                 if gnom==True:
@@ -448,14 +442,14 @@ class PyMN_RUN(PyNM):
                 cv_pmdecer=f_data['pmdec_error']
                 cv_coeff=f_data['pmra_pmdec_corr']
                 w_par=f_data['w_iso']
-                if self.survey=="PS1":
-                    mag=f_data["i_R0"]
-                    colerr=sqrt(f_data['e_gmag']*f_data['e_gmag']+f_data['e_imag']*f_data['e_imag'])
-                elif self.survey=="gaia":
-                    mag=f_data["g_0"]
-                    colerr=sqrt(f_data['bp_err']*f_data['bp_err']+f_data['rp_err']*f_data['rp_err'])
-                else:
-                    print("BAD")
+                #if self.survey=="PS1":
+                #    mag=f_data["i_R0"]
+                #    colerr=sqrt(f_data['e_gmag']*f_data['e_gmag']+f_data['e_imag']*f_data['e_imag'])
+                #elif self.survey=="gaia":
+                #    mag=f_data["g_0"]
+                #    colerr=sqrt(f_data['bp_err']*f_data['bp_err']+f_data['rp_err']*f_data['rp_err'])
+                #else:
+                #    print("BAD")
                 #self.King=where(f_data['dist']<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),0)
                 a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename= self.outbase_name)
                 RWE=a.get_data()
@@ -464,7 +458,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],mag[j],colerr[j],self.PCMD_CL[j],self.PCMD_MW[j])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],self.PCMD_CL[j],self.PCMD_MW[j])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]
