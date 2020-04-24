@@ -57,6 +57,7 @@ class PyMN_RUN(PyNM):
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),0)
         self.Plummer=where(self.dist<=tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),1e-99)
+        self.Plummer=self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","xpm_const","ypm_const"]
         self.N_params = len(self.Parameters)
         self.survey=survey
