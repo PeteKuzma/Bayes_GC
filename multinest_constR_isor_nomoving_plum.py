@@ -57,7 +57,7 @@ class PyMN_RUN(PyNM):
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),0)
         self.Plummer=where(self.dist<=tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","xpm_const","ypm_const"]
+        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2"]
         self.N_params = len(self.Parameters)
         self.survey=survey
         self.PCMD_CL=self.M2['p_cmdC']
@@ -154,7 +154,7 @@ class PyMN_RUN(PyNM):
                 parameters=["$\mu_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu_{\\xi},cl}$",\
                 "$\sigma_{\mu_{\eta},cl}$","$\mu_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu_{\\i},MW}$",\
                 "$\sigma_{\mu_{\eta},MW}$","$f_{cl}$","$f_{ex}$","$\\theta_{MW}$",\
-                "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$","$\Delta\mu_{\\xi,cl}$","$\Delta\mu_{\eta,cl}$"]
+                "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$"]
                 figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=False)
                 axes = np.array(figure.axes).reshape((self.N_params, self.N_params))
                 for i in range(self.N_params):
@@ -366,13 +366,13 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,pmxc,pmyc=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15]
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13]
         mc=(self.PCMD_CL*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         self.Plummer+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,0,k)*\
-        self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
+        self.L_pm_GC(x_cl,y_cl,pmxc,pmyc,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
         *self.PCMD_MW)
@@ -398,7 +398,7 @@ class PyMN_RUN(PyNM):
         mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
         #tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,14],sample[:,15],x_ps,y_ps,\
+        tspm=self.L_pm_GC(sample[:,0],sample[:,1],sample[:,14],sample[:,15],\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         gccmd=prcl
         mwcmd=prmw
