@@ -399,7 +399,7 @@ class PyMN_RUN(PyNM):
         mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
         #tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        tspm=self.L_pm_GC(sample[:,0],sample[:,1],sample[:,14],sample[:,15],\
+        tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         gccmd=prcl
         mwcmd=prmw

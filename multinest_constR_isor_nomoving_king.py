@@ -372,7 +372,7 @@ class PyMN_RUN(PyNM):
         #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,0,k)*\
-        self.L_pm_GC(x_cl,y_cl,pmxc,pmyc,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
+        self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
         *self.PCMD_MW)
@@ -398,7 +398,7 @@ class PyMN_RUN(PyNM):
         mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
         #tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        tspm=self.L_pm_GC(sample[:,0],sample[:,1],sample[:,14],sample[:,15],\
+        tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         gccmd=prcl
         mwcmd=prmw
