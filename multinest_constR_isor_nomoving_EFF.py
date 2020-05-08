@@ -217,12 +217,12 @@ class PyMN_RUN(PyNM):
         ((2*cv_coeff*((x_g+xc_g*xt_g)-x_pm)*((y_g+yc_g*yt_g)-y_pm))/(cv_pmraer*cv_pmdecer))))
         return mc
 
-	def L_sat_spat_PLg(self,xt_g,yt_g,ah,rmin,rmax,gam):
-		r=np.sqrt(xt_g**2+yt_g**2)
-		nom=-(-1+gam)*r*((1+r*r/(ah*ah))**(-gam))*((1+rmax*rmax/(ah*ah))**gam)
-		dom=np.pi*(rmax*rmax-ah*ah*(-1+(1+rmax*rmax/(ah*ah))**gam))
-		mc=nom/dom
-		return mc
+    def L_sat_spat_PLg(self,xt_g,yt_g,ah,rmin,rmax,gam):
+        r=np.sqrt(xt_g**2+yt_g**2)
+        nom=-(-1+gam)*r*((1+r*r/(ah*ah))**(-gam))*((1+rmax*rmax/(ah*ah))**gam)
+        dom=np.pi*(rmax*rmax-ah*ah*(-1+(1+rmax*rmax/(ah*ah))**gam))
+        mc=nom/dom
+        return mc
 
     def L_pm_GC_old(self,x_g,y_g,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff):
         '''

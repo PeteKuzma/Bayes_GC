@@ -260,12 +260,12 @@ class PyMN_RUN(PyNM):
         +log(1+self.rmax**2/ah**2)))       
         return mc
 
-	def L_sat_spat_PLg(self,xt_g,yt_g,ah,rmin,rmax,gam):
-		r=np.sqrt(xt_g**2+yt_g**2)
-		nom=-(-1+gam)*r*((1+r*r/(ah*ah))**(-gam))*((1+rmax*rmax/(ah*ah))**gam)
-		dom=np.pi*(rmax*rmax-ah*ah*(-1+(1+rmax*rmax/(ah*ah))**gam))
-		mc=nom/dom
-		return mc
+    def L_sat_spat_PLg(self,xt_g,yt_g,ah,rmin,rmax,gam):
+        r=np.sqrt(xt_g**2+yt_g**2)
+        nom=-(-1+gam)*r*((1+r*r/(ah*ah))**(-gam))*((1+rmax*rmax/(ah*ah))**gam)
+        dom=np.pi*(rmax*rmax-ah*ah*(-1+(1+rmax*rmax/(ah*ah))**gam))
+        mc=nom/dom
+        return mc
 
 
     def L_sat_grad(self,xt_g,yt_g,the,a,b):
