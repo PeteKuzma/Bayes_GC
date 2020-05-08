@@ -56,7 +56,7 @@ class PyMN_RUN(PyNM):
         PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2"]
+        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","xpm_const","ypm_const"]
         self.N_params = len(self.Parameters)
         self.survey=survey
         self.PCMD_CL=self.M2['p_cmdC']
@@ -364,23 +364,23 @@ class PyMN_RUN(PyNM):
         mc=exp(-1/2.*log(4*(pi**2)*((cv_pmraer**2+sx_g**2)*(cv_pmdecer**2+sy_g**2)-(cv_coeff*cv_pmraer*cv_pmdecer)**2))        -(0.5*(((x_g-x_pm)**2*(cv_pmdecer**2+sy_g**2)-2*cv_coeff*cv_pmraer*cv_pmdecer*(x_g-x_pm)*(y_g-y_pm)+           (y_g-y_pm)**2*(cv_pmraer**2+sx_g**2))/               ((cv_pmraer**2+sx_g**2)*(cv_pmdecer**2+sy_g**2)-                cv_coeff**2*cv_pmraer**2*cv_pmdecer**2))))
         return mc
 
-
-
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13]
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,pmxc,pmyc=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15]
         mc=(self.PCMD_CL*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         where(np.sqrt(self.x_ps*self.x_ps+self.y_ps*self.y_ps)>=self.tr,self.L_sat_gauss_stripe(self,xt_g,yt_g,the2,k),0)*\
-        self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
+        self.L_pm_GC_moving(x_cl,y_cl,pmxc,pmyc,self.x_ps,self.y_ps,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
         (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
         *self.PCMD_MW)
         mc=np.where(mc>0,mc,1e-99)
         mc=np.log(mc).sum()
         return mc
+
+
 
 
 
@@ -400,7 +400,7 @@ class PyMN_RUN(PyNM):
         mwsp=self.L_sat_grad(x_ps,y_ps,sample[:,10],1,sample[:,11])
         #tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
+        tspm=self.L_pm_GC_moving(sample[:,0],sample[:,1],sample[:,14],sample[:,15],x_ps,y_ps,\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         gccmd=prcl
         mwcmd=prmw
