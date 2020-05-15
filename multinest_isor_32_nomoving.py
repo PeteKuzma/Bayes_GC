@@ -311,13 +311,54 @@ class PyMN_RUN(PyNM):
     def L_sat_quad_r(self,xt_g,yt_g,the,gam,b):
         r=sqrt(xt_g*xt_g+yt_g*yt_g)
         theta=np.arctan2(yt_g,xt_g)
-        eq1=(1/(224*(32768 + 6435*k)*np.pi))*(self.rmax**(-2+gam))*(r**(1-gam))*(2-gam)
-        eq2=(3670016 + 720720*k + 203840*k*np.cos(8*the - 8*theta) +\
-        489216*k*np.cos(6*the - 6*theta) + 896896*k*np.cos(4*the - 4*theta) + \
-        1281280*k*np.cos(2 the - 2 theta) + 62720*k*np.cos(10 (the - theta)) + \
-        13440*k*np.cos(12 (the - theta)) + 1792*k*np.cos(14 (the - theta)) + \
-        112*k*np.cos(16 (the - theta))
-        mc=eq1*eq2
+        mc=-((1073741824*self.rmax**(-2+gam)*(-2+gam)*(-((\
+        RX**(1-gam)*(2-gam))/(-2+gam))-(\
+        300540195*b*RX**(1-gam)*(2-gam))/(\
+        2147483648*(-2+gam))-(\
+        *b*RX**(1-gam)*(2-gam)*np.cos(32*the-32*theta))/(\
+        2147483648*(-2+gam))-(\
+        *b*RX**(1-gam)*(2-gam)*np.cos(30*the-30*theta))/(\
+        67108864*(-2+gam))-(\
+        31*b*RX**(1-gam)*(2-gam)*np.cos(28*the-28*theta))/(\
+        134217728*(-2+gam))-(\
+        155*b*RX**(1-gam)*(2-gam)*np.cos(26*the-26*theta))/(\
+        67108864*(-2+gam))-(\
+        4495*b*RX**(\
+        1-gam)*(2-gam)*np.cos(24*the-24*theta))/(\
+        268435456*(-2+gam))-(\
+        6293*b*RX**(\
+        1-gam)*(2-gam)*np.cos(22*the-22*theta))/(\
+        67108864*(-2+gam))-(\
+        56637*b*RX**(\
+        1-gam)*(2-gam)*np.cos(20*the-20*theta))/(\
+        134217728*(-2+gam))-(\
+        105183*b*RX**(\
+        1-gam)*(2-gam)*np.cos(18*the-18*theta))/(\
+        67108864*(-2+gam))-(\
+        2629575*b*RX**(\
+        1-gam)*(2-gam)*np.cos(16*the-16*theta))/(\
+        536870912*(-2+gam))-(\
+        876525*b*RX**(\
+        1-gam)*(2-gam)*np.cos(14*the-14*theta))/(\
+        67108864*(-2+gam))-(\
+        4032015*b*RX**(\
+        1-gam)*(2-gam)*np.cos(12*the-12*theta))/(\
+        134217728*(-2+gam))-(\
+        4032015*b*RX**(\
+        1-gam)*(2-gam)*np.cos(10*the-10*theta))/(\
+        67108864*(-2+gam))-(\
+        28224105*b*RX**(\
+        1-gam)*(2-gam)*np.cos(8*the-8*theta))/(\
+        268435456*(-2+gam))-(\
+        10855425*b*RX**(\
+        1-gam)*(2-gam)*np.cos(6*the-6*theta))/(\
+        67108864*(-2+gam))-(\
+        29464725*b*RX**(\
+        1-gam)*(2-gam)*np.cos(4*the-4*theta))/(\
+        134217728*(-2+gam))-(\
+        17678835*b*RX**(\
+        1-gam)*(2-gam)*np.cos(2*the-2*theta))/(\
+        67108864*(-2+gam))))/((2147483648+300540195*b)*np.pi))
         return mc
 
 
