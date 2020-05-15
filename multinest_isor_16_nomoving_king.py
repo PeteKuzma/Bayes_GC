@@ -308,7 +308,7 @@ class PyMN_RUN(PyNM):
 
 
 
-    def L_sat_quad_r(self,xt_g,yt_g,the,gam,b):
+    def L_sat_quad_r(self,xt_g,yt_g,the,gam,k):
         r=sqrt(xt_g*xt_g+yt_g*yt_g)
         theta=np.arctan2(yt_g,xt_g)
         eq1=(1/(224*(32768 + 6435*k)*np.pi))*(self.rmax**(-2+gam))*(r**(1-gam))*(2-gam)
