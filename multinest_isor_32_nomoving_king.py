@@ -312,52 +312,40 @@ class PyMN_RUN(PyNM):
         r=sqrt(xt_g*xt_g+yt_g*yt_g)
         theta=np.arctan2(yt_g,xt_g)
         mc=-((1073741824*self.rmax**(-2+gam)*(-2+gam)*(-((\
-        RX**(1-gam)*(2-gam))/(-2+gam))-(\
-        300540195*b*RX**(1-gam)*(2-gam))/(\
+        r**(1-gam)*(2-gam))/(-2+gam))-(\
+        300540195*b*r**(1-gam)*(2-gam))/(\
         2147483648*(-2+gam))-(\
-        *b*RX**(1-gam)*(2-gam)*np.cos(32*the-32*theta))/(\
+        b*r**(1-gam)*(2-gam)*np.cos(32*the-32*theta))/(\
         2147483648*(-2+gam))-(\
-        *b*RX**(1-gam)*(2-gam)*np.cos(30*the-30*theta))/(\
+        b*r**(1-gam)*(2-gam)*np.cos(30*the-30*theta))/(\
         67108864*(-2+gam))-(\
-        31*b*RX**(1-gam)*(2-gam)*np.cos(28*the-28*theta))/(\
+        31*b*r**(1-gam)*(2-gam)*np.cos(28*the-28*theta))/(\
         134217728*(-2+gam))-(\
-        155*b*RX**(1-gam)*(2-gam)*np.cos(26*the-26*theta))/(\
+        155*b*r**(1-gam)*(2-gam)*np.cos(26*the-26*theta))/(\
         67108864*(-2+gam))-(\
-        4495*b*RX**(\
-        1-gam)*(2-gam)*np.cos(24*the-24*theta))/(\
+        4495*b*r**(1-gam)*(2-gam)*np.cos(24*the-24*theta))/(\
         268435456*(-2+gam))-(\
-        6293*b*RX**(\
-        1-gam)*(2-gam)*np.cos(22*the-22*theta))/(\
+        6293*b*r**(1-gam)*(2-gam)*np.cos(22*the-22*theta))/(\
         67108864*(-2+gam))-(\
-        56637*b*RX**(\
-        1-gam)*(2-gam)*np.cos(20*the-20*theta))/(\
+        56637*b*r**(1-gam)*(2-gam)*np.cos(20*the-20*theta))/(\
         134217728*(-2+gam))-(\
-        105183*b*RX**(\
-        1-gam)*(2-gam)*np.cos(18*the-18*theta))/(\
+        105183*b*r**(1-gam)*(2-gam)*np.cos(18*the-18*theta))/(\
         67108864*(-2+gam))-(\
-        2629575*b*RX**(\
-        1-gam)*(2-gam)*np.cos(16*the-16*theta))/(\
+        2629575*b*r**(1-gam)*(2-gam)*np.cos(16*the-16*theta))/(\
         536870912*(-2+gam))-(\
-        876525*b*RX**(\
-        1-gam)*(2-gam)*np.cos(14*the-14*theta))/(\
+        876525*b*r**(1-gam)*(2-gam)*np.cos(14*the-14*theta))/(\
         67108864*(-2+gam))-(\
-        4032015*b*RX**(\
-        1-gam)*(2-gam)*np.cos(12*the-12*theta))/(\
+        4032015*b*r**(1-gam)*(2-gam)*np.cos(12*the-12*theta))/(\
         134217728*(-2+gam))-(\
-        4032015*b*RX**(\
-        1-gam)*(2-gam)*np.cos(10*the-10*theta))/(\
+        4032015*b*r**(1-gam)*(2-gam)*np.cos(10*the-10*theta))/(\
         67108864*(-2+gam))-(\
-        28224105*b*RX**(\
-        1-gam)*(2-gam)*np.cos(8*the-8*theta))/(\
+        28224105*b*r**(1-gam)*(2-gam)*np.cos(8*the-8*theta))/(\
         268435456*(-2+gam))-(\
-        10855425*b*RX**(\
-        1-gam)*(2-gam)*np.cos(6*the-6*theta))/(\
+        10855425*b*r**(1-gam)*(2-gam)*np.cos(6*the-6*theta))/(\
         67108864*(-2+gam))-(\
-        29464725*b*RX**(\
-        1-gam)*(2-gam)*np.cos(4*the-4*theta))/(\
+        29464725*b*r**(1-gam)*(2-gam)*np.cos(4*the-4*theta))/(\
         134217728*(-2+gam))-(\
-        17678835*b*RX**(\
-        1-gam)*(2-gam)*np.cos(2*the-2*theta))/(\
+        17678835*b*r**(1-gam)*(2-gam)*np.cos(2*the-2*theta))/(\
         67108864*(-2+gam))))/((2147483648+300540195*b)*np.pi))
         return mc
 

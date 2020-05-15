@@ -314,8 +314,8 @@ class PyMN_RUN(PyNM):
         eq1=(1/(224*(32768 + 6435*k)*np.pi))*(self.rmax**(-2+gam))*(r**(1-gam))*(2-gam)
         eq2=(3670016 + 720720*k + 203840*k*np.cos(8*the - 8*theta) +\
         489216*k*np.cos(6*the - 6*theta) + 896896*k*np.cos(4*the - 4*theta) + \
-        1281280*k*np.cos(2 the - 2 theta) + 62720*k*np.cos(10 (the - theta)) + \
-        13440*k*np.cos(12 (the - theta)) + 1792*k*np.cos(14 (the - theta)) + \
+        1281280*k*np.cos(2*the - 2*theta) + 62720*k*np.cos(10*(the - theta)) + \
+        13440*k*np.cos(12*(the - theta)) + 1792*k*np.cos(14*(the - theta)) + \
         112*k*np.cos(16 (the - theta))
         mc=eq1*eq2
         return mc
