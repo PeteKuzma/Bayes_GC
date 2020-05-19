@@ -254,8 +254,8 @@ class PyMN_RUN(PyNM):
     def L_sat_king(self,xt_g,yt_g,ah,rt):
         r=sqrt(xt_g**2+yt_g**2)
         mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
-        (pi*((self.rmax**2+4*(ah-sqrt(ah**2+self.rmax**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
-        +log(1+self.rmax**2/ah**2)))       
+        (pi*((self.tr**2+4*(ah-sqrt(ah**2+self.tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
+        +log(1+self.tr**2/ah**2)))       
         return mc
 
 
@@ -408,9 +408,9 @@ class PyMN_RUN(PyNM):
         mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
         (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)))
         mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
-        (((gccmd*fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
+        (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         mc_ts=(gccmd*fcl*(1-fev)*tspm*gcct)/\
-        (((gccmd*fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
+        (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_co),np.nanstd(mc_co),np.nanmean(mc_ts),np.nanstd(mc_ts)
 
 

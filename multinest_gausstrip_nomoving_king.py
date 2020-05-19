@@ -254,8 +254,8 @@ class PyMN_RUN(PyNM):
     def L_sat_king(self,xt_g,yt_g,ah,rt):
         r=sqrt(xt_g**2+yt_g**2)
         mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
-        (pi*((self.rmax**2+4*(ah-sqrt(ah**2+self.rmax**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
-        +log(1+self.rmax**2/ah**2)))       
+        (pi*((self.tr**2+4*(ah-sqrt(ah**2+self.tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
+        +log(1+self.tr**2/ah**2)))       
         return mc
 
     def L_sat_gauss_stripe(self,xt_g,yt_g,rot,k):
