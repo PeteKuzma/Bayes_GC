@@ -387,7 +387,7 @@ class PyMN_RUN(PyNM):
         mc=self.PCMD_CL*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
-        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),1e-99)+(1-fev)*fcl*\
+        where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,cr,tr),1e-99)+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
