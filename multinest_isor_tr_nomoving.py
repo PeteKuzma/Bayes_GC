@@ -56,7 +56,7 @@ class PyMN_RUN(PyNM):
         PyNM.__init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
-        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
+        self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","rt"]
         self.N_params = len(self.Parameters)
         self.survey=survey
         self.PCMD_CL=self.M2['p_cmdC']
@@ -164,7 +164,7 @@ class PyMN_RUN(PyNM):
                 parameters=["$\mu^{*}_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu^{*}_{\\xi},cl}$",\
                 "$\sigma_{\mu_{\eta},cl}$","$\mu^{*}_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu^{*}_{\\xi},MW}$",\
                 "$\sigma_{\mu_{\eta},MW}$","$f_{cl+ex}$","$f_{cl}$","$\\theta_{MW}$",\
-                "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$"]
+                "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$","$r_{t}$"]
                 figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=True,title_fmt='.3f')
                 axes = np.array(figure.axes).reshape((self.N_params, self.N_params))
                 for i in range(self.N_params):
@@ -382,12 +382,12 @@ class PyMN_RUN(PyNM):
 
 
     def loglike_ndisp(self,cube, ndim, nparams):
-        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam=\
-        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
+        x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,tr=\
+        cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15]
         mc=self.PCMD_CL*(\
         self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
-        self.King+(1-fev)*fcl*\
+        where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,tr),1e-99)+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
@@ -405,8 +405,7 @@ class PyMN_RUN(PyNM):
         '''
         #gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
         gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
-        #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-        gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
+        gcsp=where(dist<=sample[:,15],self.L_sat_king(x_ps,y_ps,self.cr,sample[:,15]),1e-99)
         #gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
         gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
         ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
