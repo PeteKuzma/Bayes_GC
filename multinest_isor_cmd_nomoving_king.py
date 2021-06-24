@@ -151,27 +151,38 @@ class PyMN_RUN(PyNM):
         if rank==0:
             try:
                 a = pymultinest.Analyzer(n_params = self.N_params, outputfiles_basename=self.outbase_name)
+                self.nsx=a
                 s = a.get_stats()
                 #plt.clf()
                 data = a.get_data()[:,2:]
+                for i in range(len(data)):
+                    data[i,10]=-57.296*data[i,10]+90
+                    data[i,12]=-57.296*data[i,12]+90
                 weights = a.get_data()[:,0]
                 mask = weights > 1e-4
                 modes = s['modes']
-                parameters=["$\mu_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu_{\\xi},cl}$",\
-                "$\sigma_{\mu_{\eta},cl}$","$\mu_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu_{\\i},MW}$",\
-                "$\sigma_{\mu_{\eta},MW}$","$f_{1}$","$f_{2}$","$\\theta_{MW}$",\
+                parameters=["$\mu^{*}_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu^{*}_{\\xi},cl}$",\
+                "$\sigma_{\mu_{\eta},cl}$","$\mu^{*}_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu^{*}_{\\xi},MW}$",\
+                "$\sigma_{\mu_{\eta},MW}$","$f_{cl+ex}$","$f_{cl}$","$\\theta_{MW}$",\
                 "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$"]
-                figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=False)
+                figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=True,title_fmt='.3f')
                 axes = np.array(figure.axes).reshape((self.N_params, self.N_params))
                 for i in range(self.N_params):
-                	m = s['marginals'][i]
-                	ax = axes[i, i]
-                	ax.set_title("{0}".format(parameters[i]))
-                	ylim = ax.get_ylim()
-                	y = min(ylim) +max(ylim)/10
-                	center = m['median']
-                	low1, high1 = m['1sigma']
-                	ax.errorbar(x=center, y=y,xerr=np.transpose([[center - low1, high1 - center]]),color='red', linewidth=2, marker='s')
+                    m = s['marginals'][i]
+                    ax = axes[i, i]
+                    ax.set_title("{0}".format(parameters[i]))
+                    ylim = ax.get_ylim()
+                    y = min(ylim) +max(ylim)/10
+                    if i == 10 or i==12:
+                        center = -57.296*m['median']+90
+                        low1, high1 = m['1sigma']
+                        low1 =-57.296*low1+90
+                        high1=-57.296*high1+90
+                        print(i,center,center - low1,high1 - center)
+                    else:
+                        center=m['median']
+                        low1, high1 = m['1sigma']
+                    ax.errorbar(x=center, y=y,xerr=np.transpose([[center - low1, high1 - center]]),color='red', linewidth=2, marker='s')
                 if save_fig==True:
                     plt.savefig("{0}_{1}_post_corner.pdf".format(self.cluster,self.outbase_name),format='pdf')
                 else:
