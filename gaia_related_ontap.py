@@ -60,7 +60,9 @@ import proxyTap
 proxyTap.setProxy(Gaia, 'cuillin', 3128)
 import time
 from astropy.stats import sigma_clip
-
+import astropy.coordinates as coord
+import astropy.units as u
+import gala.coordinates as gc
 #PANSTARRS
 import mastcasjobs
 
@@ -166,6 +168,42 @@ class gaia:
             raise ValueError("Unknown object '{}'".format(name))
         return (objRa, objDec)
 
+    def SRM_pm_correct(self,cluster,dist,pmra,pmdec,has_space="no",altname=False,specfile=""):
+        center = coordinates.SkyCoord.from_name(cluster)
+        RA=center.ra.value
+        DEC=center.dec.value
+        print(RA,DEC)
+        f_in=fits.open("{0}/{0}_bays_ready_FULL.fits".format(cluster))
+        f_data=Table(f_in[1].data)
+        c = coord.SkyCoord(ra=f_data['ra']*u.deg,
+                           dec=f_data['dec']*u.deg,
+                           distance=dist*u.pc,
+                           pm_ra_cosdec=f_data['pmra']*u.mas/u.yr,
+                           pm_dec=f_data['pmdec']*u.mas/u.yr,
+                           radial_velocity=0*u.km/u.s)
+        xa=gc.reflex_correct(c)
+        f_data['pmra_SRM']=xa.pm_ra_cosdec
+        f_data['pmdec_SRM']=xa.pm_dec
+        cl = coord.SkyCoord(ra=RA*u.deg,
+                           dec=DEC*u.deg,
+                           distance=dist*u.pc,
+                           pm_ra_cosdec=pmra*u.mas/u.yr,
+                           pm_dec=pmdec*u.mas/u.yr,
+                           radial_velocity=0*u.km/u.s)
+        xal=gc.reflex_correct(cl)        
+        for i in PB.progressbar(range(len(f_data))):
+            a=np.deg2rad(f_data['ra'][i])
+            racl=np.deg2rad(f_data['ra'][i]-RA)
+            de=np.deg2rad(f_data['dec'][i])
+            decl=np.deg2rad(DEC)
+            pmr=f_data['pmra_SRM'][i]
+            f_data['pmra_g_SRM'][i]=pmr*np.cos(racl)-f_data['pmdec_SRM'][i]*np.sin(de)*np.sin(racl)
+            f_data['pmdec_g_SRM'][i]=pmr*np.sin(decl)*np.sin(racl)+f_data['pmdec_SRM'][i]*\
+            (np.cos(de)*np.cos(decl)+np.sin(de)*np.sin(decl)*np.cos(racl))
+        f_data.write("{0}/{0}_bays_ready_FULL.fits".format(cluster),format="fits",overwrite=True)    
+        f_data=f_data['ra_g','dec_g','pmra_g','pmdec_g','pmra_error','pmdec_error','dist',\
+            'pmra_pmdec_corr','w_iso','pmra','pmdec','ra_error','dec_error','ra_dec_corr','p_cmdM','p_cmdC','pmra_g_SRM','pmdec_g_SRM']
+        f_data.write("{0}/{0}_bays_ready.fits".format(cluster),format="fits",overwrite=True)  
 
     
     def get_gaia_data(self,cluster,rad=4,force_run=False):
