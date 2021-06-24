@@ -47,71 +47,31 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 # Definitions
 # ---------------------------------------------------
 class PyNM:
-    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
+    def __init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,select=True,pm_sel="gnom",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
         if outbase_add!=None:
             self.outbase_add=outbase_add
             self.outbase_name="{0}_{1}_pymn_out_".format(cluster,outbase_add)
         else:
             self.outbase_name="{0}_pymn_out_".format(cluster)
-        self.rad_sel=radius
-	#self.resume=resume
         self.cluster=cluster
         self.cluster_F=cluster
         self.Prior=prior
         self.rmin=inner_radii/60.
         self.rmax=rmax
         self.Live_Points=live_points
-        self.clcut=clcut
-        self.pmra=pmra
-        self.pmdec=pmdec
         self.phot=phot
         self.psel=pmsel
         if Fadd!=None:
             self.cluster_F="{0}{1}".format(self.cluster,Fadd)
         print("Changing to cluster directory:\nGaia/{0}/\n".format(self.cluster_F))
         os.chdir(self.cluster_F)
-        if existing==True and os.path.isfile("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size)) == True: 
-            print("Load sample fits file:  \n{0}_{1}_sample_bayes.fits\n".format(self.cluster,sample_size))        
-            hdu3=fits.open("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size))
-            M2_d=Table(hdu3[1].data)
-            M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-            M2=M2[np.isnan(M2['w_iso'])==False]
-        if select==False:
-            try:
-                print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
-                hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-                M2_d=Table(hdu3[1].data)
-            except MemoryError:
-                print("Memory error. Reloading")
-                hdu3.close()
-                del hdu3
-                #del M2_d
-                hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-                M2_d=Table(hdu3[1].data)
-            M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-            M2=M2[np.isnan(M2['w_iso'])==False]    
-        else:
-            print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
-            hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-            M2_d=Table(hdu3[1].data)
-            #except MemoryError:
-             #   hdu3.close()
-              #  del hdu3
-                #del M2_d
-               # print("Memory error. Reloading. \n".format(self.cluster))
-               # hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
-               # M2_d=Table(hdu3[1].data)
-            M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
-            M2=M2[np.isnan(M2['w_iso'])==False]
-        if select==True and existing==False:
-            print("Selecting sample from full data set\n")
-            m2=hdu3[1].data    
-            M2=Table(m2[np.random.choice(m2.shape[0], sample_size, replace=False)])
-            self.SAMP=M2
-            M2.write("{0}_{1}_sample_bayes.fits".format(self.cluster,sample_size),format="fits",overwrite=True)
-        else:
-            print("Selecting full sample\n")
-            M2=M2
+        print("Load fits file: \n{0}_bays_ready.fits\n".format(self.cluster))
+        hdu3=fits.open("{0}_bays_ready.fits".format(self.cluster))
+        M2_d=Table(hdu3[1].data)
+        M2=M2_d[M2_d['dist']>=(inner_radii/60.)]
+        M2=M2[np.isnan(M2['w_iso'])==False]    
+        print("Selecting full sample\n")
+        M2=M2
         M2=M2[M2['dist']>=self.rmin]
         M2=M2[M2['dist']<=rmax]
         #if survey=="gaia":
@@ -128,9 +88,9 @@ class PyNM:
             print("Selecting projected PMs\n")
             self.x_pm=M2['pmra_g'] # Proper motion in x_projection.
             self.y_pm=M2['pmdec_g'] # Proper motion in y_projection.
-        self.cv_pmraer=M2['pmra_error']# Proper Motion Covariance Matrix elements - error in pmra
-        self.cv_pmdecer=M2['pmdec_error'] # Proper motion err in pmdec
-        self.cv_coeff=M2['pmra_pmdec_corr'] # Proper motion correlation factor between pmra and pmdec
+        self.cv_pmraer=M2['pmra_g_err']# Proper Motion Covariance Matrix elements - error in pmra
+        self.cv_pmdecer=M2['pmdec_g_err'] # Proper motion err in pmdec
+        self.cv_coeff=M2['pmra_pmdec_g_corr'] # Proper motion correlation factor between pmra and pmdec
         self.w_par=M2['w_iso']
         self.tr=tr
         self.cr=cr

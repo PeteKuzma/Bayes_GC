@@ -52,8 +52,8 @@ import corner
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-    def __init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,pmcsel,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6):
-        PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,lh,pmra,pmdec,clcut,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
+    def __init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,pmcsel,select=True,pm_sel="gnom",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6,SET=0.5,SSE=0.8,CEF=False):
+        PyNM.__init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
         self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
@@ -63,13 +63,18 @@ class PyMN_RUN(PyNM):
         self.PCMD_MW=self.M2[pmcsel]
         self.phot=phot
         self.survey=survey
+        self.SSE=SSE
+        self.SET=SET
+        self.CEF=CEF
+
 
     def PyMultinest_run(self,resume=False):
         print("Run PyMultiNest")
         try:
             tstart=time.time()
             pymultinest.run(self.loglike_ndisp, self.Prior, self.N_params,outputfiles_basename=self.outbase_name, \
-            resume = resume, verbose = True,n_live_points=self.Live_Points)
+            resume = resume, verbose = True,n_live_points=self.Live_Points,const_efficiency_mode=self.CEF,\
+            evidence_tolerance = self.SET, sampling_efficiency = self.SSE)
             json.dump(self.Parameters, open("{0}_params.json".format(self.outbase_name), 'w')) # save parameter names
             tend=time.time()
             print("time taken: {0}".format(tend-tstart))
@@ -87,6 +92,8 @@ class PyMN_RUN(PyNM):
                 f.write('%15s : %.5f +- %.5f \n' % (name, col.mean(), col.std()))
         except FileNotFoundError:
             print("Set-up not performed. Please run PyMultinest_setup.")
+              
+        
         
     def PyMultinest_plots(self,setup="complete",save_fig=True):
         try:
@@ -152,7 +159,7 @@ class PyMN_RUN(PyNM):
                 modes = s['modes']
                 parameters=["$\mu_{\\xi,cl}$","$\mu_{\eta,cl}$","$\sigma_{\mu_{\\xi},cl}$",\
                 "$\sigma_{\mu_{\eta},cl}$","$\mu_{\\xi,MW}$","$\mu_{\eta,MW}$","$\sigma_{\mu_{\\i},MW}$",\
-                "$\sigma_{\mu_{\eta},MW}$","$f_{cl}$","$f_{ex}$","$\\theta_{MW}$",\
+                "$\sigma_{\mu_{\eta},MW}$","$f_{1}$","$f_{2}$","$\\theta_{MW}$",\
                 "$k_{MW}$","$\\theta_{ex}$","$k_{ex}$","$\gamma$"]
                 figure=corner.corner(data[mask,:], weights=weights[mask],labels=parameters, show_titles=False)
                 axes = np.array(figure.axes).reshape((self.N_params, self.N_params))
@@ -413,7 +420,7 @@ class PyMN_RUN(PyNM):
         return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_co),np.nanstd(mc_co),np.nanmean(mc_ts),np.nanstd(mc_ts)
 
 
-    def Membership_after_PyNM(self,sample_size,rad,gnom=True):
+    def Membership_after_PyNM(self,sample_size,gnom=True):
         '''
         Run this after PyMultiNest to calculate membership of all stars.
         '''
@@ -438,9 +445,9 @@ class PyMN_RUN(PyNM):
                 else:
                     x_pm=f_data['pmra']
                     y_pm=f_data['pmdec']
-                cv_pmraer=f_data['pmra_error']
-                cv_pmdecer=f_data['pmdec_error']
-                cv_coeff=f_data['pmra_pmdec_corr']
+                cv_pmraer=f_data['pmra_g_err']
+                cv_pmdecer=f_data['pmdec_g_err']
+                cv_coeff=f_data['pmra_pmdec_g_corr']
                 w_par=f_data['w_iso']
                 #if self.survey=="PS1":
                 #    mag=f_data["i_R0"]
