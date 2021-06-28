@@ -47,15 +47,17 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 from multinest_baseCMD_test import PyNM
 from mpi4py import MPI
 import corner
+from uncertainties import ufloat as uf
+from uncertainties import umath as um
+from uncertainties import unumpy as un
 
 # ---------------------------------------------------
 # Definitions
 # ---------------------------------------------------
 class PyMN_RUN(PyNM):
-    def __init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,pmcsel,select=True,pm_sel="gnom",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6,SET=0.5,SSE=0.8,CEF=False):
+    def __init__(self,cluster,prior,inner_radii,cr,tr,cre,tre,lh,dist,survey,pmcsel,select=True,pm_sel="gnom",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6,SET=0.5,SSE=0.8,CEF=False):
         PyNM.__init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
-        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
         self.N_params = len(self.Parameters)
         self.survey=survey
@@ -66,6 +68,19 @@ class PyMN_RUN(PyNM):
         self.SSE=SSE
         self.SET=SET
         self.CEF=CEF
+        self.radt=np.zeros(len(self.dist)) 
+        self.radte=np.zeros(len(self.dist)) 
+        self.radc=np.zeros(len(self.dist)) 
+        self.radce=np.zeros(len(self.dist))
+        XA=(umath.atan(ufloat(tr,tre)/(dist*1000)))*180/np.pi
+        self.TR=XA.n
+        self.TRE=XA.s
+        XA=(umath.atan(ufloat(cr,cre)/(dist*1000)))*180/np.pi
+        self.CR=XA.n
+        self.CRE=XA.s
+        self.TR=rand.normal(self.TR,self.TRE,size=len(self.dist))
+        self.CR=rand.normal(self.CR,self.CRE,size=len(self.dist))
+        self.King=where(self.dist<=self.TR,self.L_sat_king(self.x_ps,self.y_ps,self.CR,self.TR),1e-99)
 
 
     def PyMultinest_run(self,resume=False):
@@ -268,11 +283,11 @@ class PyMN_RUN(PyNM):
         return mc
 
 
-    def L_sat_king(self,xt_g,yt_g,ah,rt):
+    def L_sat_king(self,xt_g,yt_g,ah,tr):
         r=sqrt(xt_g**2+yt_g**2)
         mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
-        (pi*((self.tr**2+4*(ah-sqrt(ah**2+self.tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
-        +log(1+self.tr**2/ah**2)))       
+        (pi*((tr**2+4*(ah-sqrt(ah**2+tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
+        +log(1+tr**2/ah**2)))       
         return mc
 
 
@@ -403,7 +418,7 @@ class PyMN_RUN(PyNM):
         #gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
         gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
         #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-        gcsp=where(dist<=self.tr,self.L_sat_king(x_ps,y_ps,self.cr,self.tr),1e-99)
+        gcsp=where(dist<=self.TR,self.L_sat_king(x_ps,y_ps,self.CR,self.TR),1e-99)
         #gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
         gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
         ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
