@@ -55,7 +55,7 @@ class PyMN_RUN(PyNM):
     def __init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,pmcsel,select=True,pm_sel="gnom",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None,pmsel=1,phot=1.6,SET=0.5,SSE=0.8,CEF=False):
         PyNM.__init__(self,cluster,prior,inner_radii,cr,tr,lh,survey,select=select,pm_sel=pm_sel,live_points=live_points,existing=existing,rmax=rmax,Fadd=Fadd,preking=preking,outbase_add=outbase_add,pmsel=1,phot=phot)
 #PyNM.__init__(self,cluster,radius,prior,inner_radii,sample_size,cr,tr,select=True,pm_sel="norm",live_points=400,existing=False,rmax=4.,Fadd=None,preking=False,outbase_add=None)
-        self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
+        #self.King=where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,self.tr),1e-99)
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma","tr"]
         self.N_params = len(self.Parameters)
         self.survey=survey
@@ -270,9 +270,9 @@ class PyMN_RUN(PyNM):
 
     def L_sat_king(self,xt_g,yt_g,ah,rt):
         r=sqrt(xt_g**2+yt_g**2)
-        mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
+        mc=np.where(r<rt,r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
         (pi*((self.tr**2+4*(ah-sqrt(ah**2+self.tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
-        +log(1+self.tr**2/ah**2)))       
+        +log(1+self.tr**2/ah**2))),1.0e-99)
         return mc
 
 
@@ -385,12 +385,11 @@ class PyMN_RUN(PyNM):
         x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam,tr=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14],cube[15]
         mc=self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-        #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
-        where(self.dist<=tr,self.L_sat_king(self.x_ps,self.y_ps,self.cr,tr),1e-99)+(1-fev)*fcl*\
+        self.L_sat_king(self.x_ps,self.y_ps,self.cr,tr)+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
-        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
+        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)
         mc=np.where(mc>0,mc,1e-99)
         mc=np.log(mc).sum()
         return mc
@@ -404,7 +403,7 @@ class PyMN_RUN(PyNM):
         #gcct=where(np.sqrt(x_ps*x_ps+y_ps*y_ps)>self.tr,self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13]),0)
         gcct=self.L_sat_quad_r(x_ps,y_ps,sample[:,12],sample[:,14],sample[:,13])
         #gcsp=where(x_psself.L_sat_king(x_ps,y_ps,sample[:,14],sample[:,15])
-        gcsp=where(dist<=sample[:,15],self.L_sat_king(x_ps,y_ps,self.cr,sample[:,15]),1e-99)
+        gcsp=self.L_sat_king(x_ps,y_ps,self.cr,sample[:,15])
         #gcsp=where(dist<self.tr,self.L_sat_spat_PL(x_ps,y_ps,self.cr,0,self.rmax),0)
         gcpm=self.L_pm_MW(sample[:,0],sample[:,1],sample[:,2],sample[:,3]\
         ,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
@@ -449,8 +448,8 @@ class PyMN_RUN(PyNM):
                 x_ps=f_data['ra_g']
                 y_ps=f_data['dec_g']
                 if gnom==True:
-                    x_pm=f_data['pmra_g']
-                    y_pm=f_data['pmdec_g']
+                    x_pm=f_data['pmra_g_SRM']
+                    y_pm=f_data['pmdec_g_SRM']
                 else:
                     x_pm=f_data['pmra']
                     y_pm=f_data['pmdec']
@@ -474,7 +473,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],self.PCMD_CL[j],self.PCMD_MW[j])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]

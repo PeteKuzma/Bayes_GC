@@ -385,12 +385,11 @@ class PyMN_RUN(PyNM):
         x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
         mc=self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
-        #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
         self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
-        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
+        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)
         mc=np.where(mc>0,mc,1e-99)
         mc=np.log(mc).sum()
         return mc
@@ -449,8 +448,8 @@ class PyMN_RUN(PyNM):
                 x_ps=f_data['ra_g']
                 y_ps=f_data['dec_g']
                 if gnom==True:
-                    x_pm=f_data['pmra_g']
-                    y_pm=f_data['pmdec_g']
+                    x_pm=f_data['pmra_g_SRM']
+                    y_pm=f_data['pmdec_g_SRM']
                 else:
                     x_pm=f_data['pmra']
                     y_pm=f_data['pmdec']
@@ -474,7 +473,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],self.PCMD_CL[j],self.PCMD_MW[j])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]
