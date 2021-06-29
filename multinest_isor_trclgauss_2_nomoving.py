@@ -47,9 +47,6 @@ from numpy import log, exp, pi, random, linalg, array,matrix, zeros, sqrt,log10,
 from multinest_baseCMD_test import PyNM
 from mpi4py import MPI
 import corner
-from uncertainties import ufloat as uf
-from uncertainties import umath as um
-from uncertainties import unumpy as un
 
 # ---------------------------------------------------
 # Definitions
@@ -61,25 +58,13 @@ class PyMN_RUN(PyNM):
         self.Parameters=["x_pm,cl","y_pm,cl","x_dsp,cl","y_dsp,cl","x_pm,MW","y_pm,MW","x_dsp,MW","y_dsp,MW","f_cl","f_ev","theta","k","theta2","k2","gamma"]
         self.N_params = len(self.Parameters)
         self.survey=survey
-        #self.PCMD_CL=self.M2['p_cmdC']
-        #self.PCMD_MW=self.M2[pmcsel]
+        self.PCMD_CL=self.M2['p_cmdC']
+        self.PCMD_MW=self.M2[pmcsel]
         self.phot=phot
         self.survey=survey
         self.SSE=SSE
         self.SET=SET
         self.CEF=CEF
-        #self.radt=np.zeros(len(self.dist)) 
-        #self.radte=np.zeros(len(self.dist)) 
-        #self.radc=np.zeros(len(self.dist)) 
-        #self.radce=np.zeros(len(self.dist))
-        #XA=(um.atan(uf(tr,tre)/(dist*1000)))*180/np.pi
-        #self.TR=XA.n
-        #self.TRE=XA.s
-        #XA=(um.atan(uf(cr,cre)/(dist*1000)))*180/np.pi
-        #self.CR=XA.n
-        #self.CRE=XA.s
-        #self.TR=rand.normal(self.TR,self.TRE,size=len(self.dist))
-        #self.CR=rand.normal(self.CR,self.CRE,size=len(self.dist))
         self.TR=self.M2['kg_tr']
         self.CR=self.M2['kg_cr']
         self.King=where(self.dist<=self.TR,self.L_sat_king(self.x_ps,self.y_ps,self.CR,self.TR),1e-99)
@@ -285,11 +270,11 @@ class PyMN_RUN(PyNM):
         return mc
 
 
-    def L_sat_king(self,xt_g,yt_g,ah,tr):
+    def L_sat_king(self,xt_g,yt_g,ah,rt):
         r=sqrt(xt_g**2+yt_g**2)
-        mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+tr*tr)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+tr*tr)))/\
-        (pi*((tr**2+4*(ah-sqrt(ah**2+tr**2))*sqrt(ah**2+tr**2))/(ah**2+tr**2)\
-        +log(1+tr**2/ah**2)))       
+        mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
+        (pi*((self.tr**2+4*(ah-sqrt(ah**2+self.tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
+        +log(1+self.tr**2/ah**2)))       
         return mc
 
 
@@ -401,20 +386,22 @@ class PyMN_RUN(PyNM):
     def loglike_ndisp(self,cube, ndim, nparams):
         x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
-
-        mc=self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        mc=self.PCMD_CL*(\
+        self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
+        #where(self.dist<self.tr,self.L_sat_spat_PL(self.x_ps,self.y_ps,self.cr,0,self.rmax),0)+(1-fev)*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\
-        self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
+        self.L_pm_GC(x_cl,y_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff))\
         +self.L_sat_grad(self.x_ps,self.y_ps,the,1,c)*\
-        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)
+        (1-fcl)*self.L_pm_MW(x_g,y_g,sx_g,sy_g,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)\
+        *self.PCMD_MW
         mc=np.where(mc>0,mc,1e-99)
         mc=np.log(mc).sum()
         return mc
 
 
 
-    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,cr,tr):
+    def loglike_mem(self,x_ps,y_ps,x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff,w_par,sample,dist,prcl,prmw,cr,tr):
         '''
         Calculates the membership probability for an individual star
         '''
@@ -432,17 +419,17 @@ class PyMN_RUN(PyNM):
         #x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
         tspm=self.L_pm_GC(sample[:,0],sample[:,1],\
         x_pm,y_pm,cv_pmraer,cv_pmdecer,cv_coeff)
-        #gccmd=prcl
-        #mwcmd=prmw
+        gccmd=prcl
+        mwcmd=prmw
         #tsccmd=self.L_cmd_cl(w_par,mag,colerr,sample[:,19])
         fcl=sample[:,8]
         fev=sample[:,9]
-        mc_cl=(((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
-        ((((fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp)))
-        mc_co=(fcl*fev*gcsp*gcpm)/\
-        ((((fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp))
-        mc_ts=(fcl*(1-fev)*tspm*gcct)/\
-        ((((fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp))
+        mc_cl=(gccmd*((fcl*fev)*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct))/\
+        (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd)))
+        mc_co=(gccmd*fcl*fev*gcsp*gcpm)/\
+        (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
+        mc_ts=(gccmd*fcl*(1-fev)*tspm*gcct)/\
+        (((gccmd*(fcl*fev*gcsp*gcpm+(fcl*(1-fev)*tspm*gcct)))+(1-fcl*fev-fcl*(1-fev))*mwpm*mwsp*mwcmd))
         return np.nanmean(mc_cl),np.nanstd(mc_cl),np.nanmean(mc_co),np.nanstd(mc_co),np.nanmean(mc_ts),np.nanstd(mc_ts)
 
 
@@ -466,8 +453,8 @@ class PyMN_RUN(PyNM):
                 x_ps=f_data['ra_g']
                 y_ps=f_data['dec_g']
                 if gnom==True:
-                    x_pm=f_data['pmra_g_SRM']
-                    y_pm=f_data['pmdec_g_SRM']
+                    x_pm=f_data['pmra_g']
+                    y_pm=f_data['pmdec_g']
                 else:
                     x_pm=f_data['pmra']
                     y_pm=f_data['pmdec']
@@ -493,7 +480,7 @@ class PyMN_RUN(PyNM):
                 print("Begin to calculate Membership probability.")
                 for j in PB.progressbar(range(len(w_par))):
                     zvf[j,0],zvf[j,1],zvf[j,2],zvf[j,3],zvf[j,4],zvf[j,5]=self.loglike_mem(x_ps[j],y_ps[j],x_pm[j],y_pm[j],\
-                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],ctr[i],ktr[i])
+                    cv_pmraer[j],cv_pmdecer[j],cv_coeff[j],w_par[j],tot_sample,self.dist[j],self.PCMD_CL[j],self.PCMD_MW[j],ctr[i],ktr[i])
                 f_data['cl_mean']=zvf[:,0]
                 f_data['cl_std']=zvf[:,1]
                 f_data['co_mean']=zvf[:,2]
@@ -518,4 +505,4 @@ class PyMN_RUN(PyNM):
             done = MPI.COMM_WORLD.recv(source=0)
         print("Complete. Moving on.")
     
- 
+  
