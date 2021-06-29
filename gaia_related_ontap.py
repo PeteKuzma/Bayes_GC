@@ -525,6 +525,163 @@ class gaia:
         print("after stilts")
         os.chdir(orig_path)
 
+    def get_gaia_data_4_5(self,cluster,rad=5,force_run=False):
+        '''
+        Retrieving the data from Gaia.
+        Input parameters:
+        cluster - the cluster of interest
+        rad - radius of interest from the cluster center
+        '''
+        print("Retreiving Gaia data.")
+        self.cluster=cluster
+        #gaia = TapPlus(url="http://gea.esac.esa.int/tap-server/tap")
+        print("before login")
+        Gaia.login(user='pkuzma', password='$eqJg4651')
+        print("login")
+        orig_path=os.getcwd()
+        if os.path.isdir("{0}".format(cluster)) == False:
+            print("No folder for cluster. Creating now...")
+            os.makedirs("{0}".format(cluster))
+            os.chdir("{0}".format(cluster))
+            print("Moving into cluster folder.\n")
+        else:
+            os.chdir("{0}".format(cluster))
+            print("Moving into cluster folder.\n")
+        center = coordinates.SkyCoord.from_name(cluster)
+        RA=center.ra.value
+        DEC=center.dec.value
+        self.dec=DEC
+        query="SELECT gaia.source_id,gaia.ra,gaia.ra_error,gaia.dec, \
+        gaia.dec_error,gaia.parallax,gaia.parallax_error,gaia.phot_g_mean_mag, \
+        gaia.phot_bp_mean_mag, gaia.phot_rp_mean_mag, \
+        gaia.bp_rp,gaia.dr2_radial_velocity,gaia.dr2_radial_velocity_error, \
+        gaia.pmra, gaia.pmdec, gaia.pmra_error, gaia.pmdec_error, \
+        gaia.pmra_pmdec_corr, gaia.l, gaia.b, gaia.astrometric_chi2_al, \
+        gaia.astrometric_n_good_obs_al, gaia.phot_bp_rp_excess_factor, gaia.ruwe, \
+        gaia.phot_g_mean_flux, gaia.phot_g_mean_flux_error, \
+        gaia.phot_bp_mean_flux, gaia.phot_bp_mean_flux_error, \
+        gaia.phot_rp_mean_flux, gaia.phot_rp_mean_flux_error, \
+        gaia.astrometric_params_solved, gaia.nu_eff_used_in_astrometry, gaia.pseudocolour, gaia.ecl_lat, \
+        distance( POINT('ICRS', {0},{1}), \
+        POINT('ICRS', gaia.ra, gaia.dec)) as DIST \
+        FROM gaiaedr3.gaia_source as gaia \
+        WHERE CONTAINS(POINT('ICRS',gaia.ra,gaia.dec),CIRCLE('ICRS',{0},{1},5))=1 \
+        AND gaia.pmra IS NOT NULL AND gaia.pmdec IS NOT NULL \
+        AND gaia.phot_g_mean_mag IS NOT NULL \
+        AND gaia.phot_bp_mean_mag >= 20.3 \
+        AND NOT CONTAINS (POINT('ICRS',gaia.ra,gaia.dec),CIRCLE('ICRS',{0},{1},4))=1
+        "\
+        .format(RA,DEC,rad)
+        if os.path.isfile(cluster+"_gaia_4_5.fits")==True:
+            f1=fits.open("{0}_gaia_4_5.fits".format(cluster))
+            job=Table(f1[1].data)
+            try:
+                vd=job['bp_err']
+                print("flux columns exist. Moving on.")
+                try:
+                    vd=job['parallax_cor']
+                    print("Parallax correction exists. Moving on.")
+                    os.chdir(orig_path)
+                    return None
+                except:
+                    print("Parallax error doesn't exist. Re-run post gaia.")
+            except:
+                print("flux columns don't exist. Re-run Gaia")
+                force_run=True
+        if force_run==False:
+            if os.path.isfile(cluster+"_gaia_4_5.fits")==True:
+                print("gaia already retrieved")
+            else:
+                job_gaia = Gaia.launch_job_async(query,dump_to_file=True,output_file="{0}_gaia_4_5.fits".format(cluster),\
+                output_format="fits")
+                Gaia.remove_jobs(job_gaia.jobid)
+        else:
+            job_gaia = Gaia.launch_job_async(query,dump_to_file=True,output_file="{0}_gaia_4_5.fits".format(cluster),\
+            output_format="fits")
+            Gaia.remove_jobs(job_gaia.jobid)
+        #ascii.write(job,"{0}_raw.txt".format(cluster),format="commented_header")
+        f1=fits.open("{0}_gaia_4_5.fits".format(cluster))
+        job=Table(f1[1].data)
+        job['V_mag']=job['phot_g_mean_mag']+0.02704-0.01424*job['bp_rp']+0.2156*job['bp_rp']**2-0.01426*job['bp_rp']**3
+        job['I_mag']=job['phot_g_mean_mag']-0.01753-0.76*job['bp_rp']+0.0991*job['bp_rp']**2
+        job['Vmini']=job['V_mag']-job['I_mag']
+        ra= job['ra'].astype(float)
+        dec= job['dec'].astype(float)
+        pmra  = job['pmra'].astype(float)
+        pmdec = job['pmdec'].astype(float)
+        pmrae = job['pmra_error'].astype(float)
+        pmdece= job['pmdec_error'].astype(float)
+        pmcorr= job['pmra_pmdec_corr'].astype(float)
+        sin= np.sin
+        cos   = np.cos
+        ra0=RA
+        dec0=DEC
+        d2r   = np.pi/180  # degrees to radians
+        x     = (cos(dec * d2r) * sin((ra-ra0) * d2r)) / d2r   # x,y are in degrees
+        y     = (sin(dec * d2r) * cos(dec0 * d2r) - cos(dec * d2r) * sin(dec0 * d2r) * cos((ra-ra0) * d2r)) / d2r
+        # transformation of PM and its uncertainty covariance matrix
+        Jxa   = cos((ra-ra0) * d2r)
+        Jxd   = -sin(dec * d2r) * sin((ra-ra0) * d2r)
+        Jya   = sin(dec0 * d2r) * sin((ra-ra0) * d2r)
+        Jyd   = cos(dec  * d2r) * cos(dec0 * d2r) + sin(dec * d2r) * sin(dec0 * d2r) * cos((ra-ra0) * d2r)
+        job['pmra_g']    = pmra * Jxa + pmdec * Jxd
+        job['pmdec_g']    = pmra * Jya + pmdec * Jyd
+        Cxx   = (Jxa * pmrae)**2 + (Jxd * pmdece)**2 + 2 * Jxa * Jxd * pmcorr * pmrae * pmdece
+        Cyy   = (Jya * pmrae)**2 + (Jyd * pmdece)**2 + 2 * Jya * Jyd * pmcorr * pmrae * pmdece
+        Cxy   = Jxa * Jya * pmrae**2 + Jxd * Jyd * pmdece**2 + (Jya * Jxd + Jxa * Jyd) * pmcorr * pmrae * pmdece
+        job['pmra_g_err']   = Cxx**0.5
+        job['pmdec_g_err']   = Cyy**0.5
+        job['pmra_pmdec_g_corr'] = Cxy / (job['pmra_g_err'] * job['pmdec_g_err'])
+        job['dist_r'] = (x**2 + y**2)**0.5 * 60.  # distance from cluster center in arcmin
+        job['ra_g']=x
+        job['dec_g']=y
+        zpab_g=ufloat(25.6874,0.0028)
+        zpab_bp=ufloat(25.3385,0.0028)
+        zpab_rp=ufloat(24.7479,0.0028)
+        print("Creating, now, the correct G Band magitnude")
+        job["phot_g_mean_mag_gaia"]=job['phot_g_mean_mag']
+        job["phot_g_mean_flux_gaia"]=job['phot_g_mean_flux']
+        job['phot_g_mean_mag'],job['phot_g_mean_flux']=self.correct_gband(job['bp_rp'],job['astrometric_params_solved'],job['phot_g_mean_mag'],job['phot_g_mean_flux'])
+        ge=np.zeros(len(job['ra_g']))
+        be=np.zeros(len(job['ra_g']))
+        re=np.zeros(len(job['ra_g']))       
+        for i in PB.progressbar(range(len(ge))):
+            ge[i]=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_g_mean_flux'][i],job['phot_g_mean_flux_error'][i]))+zpab_g)
+            be[i]=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_bp_mean_flux'][i],job['phot_bp_mean_flux_error'][i]))+zpab_bp)
+            re[i]=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_rp_mean_flux'][i],job['phot_rp_mean_flux_error'][i]))+zpab_rp)
+        job['g_err']=ge
+        job['bp_err']=be
+        job['rp_err']=re
+       # job['g_err']=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_g_mean_flux'],job['phot_g_mean_flux_error']))+zpab_g)
+       # job['bp_err']=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_bp_mean_flux'],job['phot_bp_mean_flux_error']))+zpab_bp)
+        #job['rp_err']=unumpy.std_devs(-2.5*unumpy.log10(unumpy.uarray(job['phot_rp_mean_flux'],job['phot_rp_mean_flux_error']))+zpab_rp)
+        print("bp_rp_phot_excess_corrected")
+        job['bp_rp_phot_excess_corrected']=self.correct_flux_excess_factor(job['bp_rp'],job['phot_bp_rp_excess_factor'])
+        print("Done. Now bp_rp_phot_ex_corr_err")
+        job['bp_rp_phot_ex_corr_err']=0.0059898 + 8.817481e-12 * (job['phot_g_mean_mag']**7.618399)
+        gmag = job['phot_g_mean_mag'].data
+        nueffused = job['nu_eff_used_in_astrometry'].data
+        psc = job['pseudocolour'].data
+        ecl_lat = job['ecl_lat'].data
+        soltype = job['astrometric_params_solved'].data
+        valid = soltype>3
+        zpvals = zpt.get_zpt(gmag[valid], nueffused[valid], psc[valid], ecl_lat[valid], soltype[valid])
+        job['parallax_cor']=(job['parallax'].data-zpvals)[np.newaxis].T
+        print("Done.")
+        tol_a=1
+        join=2
+        job.write("{0}_gaia_4_5.fits".format(self.cluster),format='fits',overwrite=True)
+        job_orig=Table(fits.open("{0}_gaia.fits".format(self.cluster))[1].data)
+        job=job[job_orig.colnames]
+        job.write("{0}_gaia_4_5.fits".format(self.cluster),format='fits',overwrite=True)
+        print("before stlts")
+        stilts_con="java -jar /home/pkuzma/Gaia/stilts.jar tcatn ifmt1=fits ifmt2=fits \
+         in1={1}_gaia.fits  in2={1}_gaia_4_5.fits nin=2 \
+         out={1}_gaia.fits ofmt='fits'".format(tol_a, cluster, join)
+        os.system(stilts_con)
+        print("after stilts")
+        os.chdir(orig_path)
+
 
     def correct_gband(self,bp_rp, astrometric_params_solved, phot_g_mean_mag, phot_g_mean_flux):
         """
@@ -627,7 +784,7 @@ class gaia:
     
     
    
-    def get_PS1_data(self,cluster,rad=4,delay=10,force_run=False):
+    def get_PS1_data(self,cluster,rad=5,delay=10,force_run=False):
         '''
         Retrieving the data from Panstarrs.
         Input parameters:
@@ -656,7 +813,8 @@ class gaia:
         m.gMeanPSFMagErr, m.rMeanPSFMagErr, m.iMeanPSFMagErr, \
         m.yMeanPSFMagErr, m.zMeanPSFMagErr \
         into mydb.{3}_python \
-        from fGetNearbyObjEq({0},{1},{2}) nb inner join ObjectThin as o \
+        from fGetNearbyObjEq({0},{1},{2}) 
+        nb inner join ObjectThin as o \
         on o.objid=nb.objid and o.nDetections>1 \
         inner join MeanObject as m on o.objid=m.objid and o.uniquePspsOBid=m.uniquePspsOBid"""\
         .format(RA,DEC,rad*60,cluster)
