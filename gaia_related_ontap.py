@@ -813,8 +813,7 @@ class gaia:
         m.gMeanPSFMagErr, m.rMeanPSFMagErr, m.iMeanPSFMagErr, \
         m.yMeanPSFMagErr, m.zMeanPSFMagErr \
         into mydb.{3}_python \
-        from fGetNearbyObjEq({0},{1},{2}) 
-        nb inner join ObjectThin as o \
+        from fGetNearbyObjEq({0},{1},{2}) nb inner join ObjectThin as o \
         on o.objid=nb.objid and o.nDetections>1 \
         inner join MeanObject as m on o.objid=m.objid and o.uniquePspsOBid=m.uniquePspsOBid"""\
         .format(RA,DEC,rad*60,cluster)
