@@ -453,11 +453,11 @@ class PyMN_RUN(PyNM):
                 x_ps=f_data['ra_g']
                 y_ps=f_data['dec_g']
                 if gnom==True:
+                    x_pm=f_data['pmra_g_SRM']
+                    y_pm=f_data['pmdec_g_SRM']
+                else:
                     x_pm=f_data['pmra_g']
                     y_pm=f_data['pmdec_g']
-                else:
-                    x_pm=f_data['pmra']
-                    y_pm=f_data['pmdec']
                 cv_pmraer=f_data['pmra_g_err']
                 cv_pmdecer=f_data['pmdec_g_err']
                 cv_coeff=f_data['pmra_pmdec_g_corr']

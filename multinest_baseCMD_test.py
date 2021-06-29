@@ -82,8 +82,8 @@ class PyNM:
         self.y_ps=M2['dec_g'] # Spatial position in y_projection.
         if pm_sel=="norm":
             print("Selecting Gaia PMs\n")
-            self.x_pm=M2['pmra'] # Proper motion in ra_projection.
-            self.y_pm=M2['pmdec'] # Proper motion in dec_projection.
+            self.x_pm=M2['pmra_g'] # Proper motion in ra_projection.
+            self.y_pm=M2['pmdec_g'] # Proper motion in dec_projection.
         else:
             print("Selecting projected PMs\n")
             self.x_pm=M2['pmra_g_SRM'] # Proper motion in x_projection.
