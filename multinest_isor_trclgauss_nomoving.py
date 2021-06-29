@@ -68,18 +68,20 @@ class PyMN_RUN(PyNM):
         self.SSE=SSE
         self.SET=SET
         self.CEF=CEF
-        self.radt=np.zeros(len(self.dist)) 
-        self.radte=np.zeros(len(self.dist)) 
-        self.radc=np.zeros(len(self.dist)) 
-        self.radce=np.zeros(len(self.dist))
-        XA=(umath.atan(ufloat(tr,tre)/(dist*1000)))*180/np.pi
-        self.TR=XA.n
-        self.TRE=XA.s
-        XA=(umath.atan(ufloat(cr,cre)/(dist*1000)))*180/np.pi
-        self.CR=XA.n
-        self.CRE=XA.s
-        self.TR=rand.normal(self.TR,self.TRE,size=len(self.dist))
-        self.CR=rand.normal(self.CR,self.CRE,size=len(self.dist))
+        #self.radt=np.zeros(len(self.dist)) 
+        #self.radte=np.zeros(len(self.dist)) 
+        #self.radc=np.zeros(len(self.dist)) 
+        #self.radce=np.zeros(len(self.dist))
+        #XA=(um.atan(uf(tr,tre)/(dist*1000)))*180/np.pi
+        #self.TR=XA.n
+        #self.TRE=XA.s
+        #XA=(um.atan(uf(cr,cre)/(dist*1000)))*180/np.pi
+        #self.CR=XA.n
+        #self.CRE=XA.s
+        #self.TR=rand.normal(self.TR,self.TRE,size=len(self.dist))
+        #self.CR=rand.normal(self.CR,self.CRE,size=len(self.dist))
+        self.TR=self.M2['kg_tr']
+        self.CR=self.M2['kg_cr']
         self.King=where(self.dist<=self.TR,self.L_sat_king(self.x_ps,self.y_ps,self.CR,self.TR),1e-99)
 
 
@@ -285,8 +287,8 @@ class PyMN_RUN(PyNM):
 
     def L_sat_king(self,xt_g,yt_g,ah,tr):
         r=sqrt(xt_g**2+yt_g**2)
-        mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+rt*rt)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+rt*rt)))/\
-        (pi*((tr**2+4*(ah-sqrt(ah**2+tr**2))*sqrt(ah**2+rt**2))/(ah**2+rt**2)\
+        mc=r *( 1/(r*r+ah*ah)+1./(ah*ah+tr*tr)-2/(sqrt(ah*ah+r*r)*sqrt(ah*ah+tr*tr)))/\
+        (pi*((tr**2+4*(ah-sqrt(ah**2+tr**2))*sqrt(ah**2+tr**2))/(ah**2+tr**2)\
         +log(1+tr**2/ah**2)))       
         return mc
 
@@ -399,6 +401,7 @@ class PyMN_RUN(PyNM):
     def loglike_ndisp(self,cube, ndim, nparams):
         x_cl,y_cl,sx_cl,sy_cl,x_g,y_g,sx_g,sy_g,fcl,fev,the,c,the2,k,gam=\
         cube[0],cube[1],cube[2],cube[3],cube[4],cube[5],cube[6],cube[7],cube[8],cube[9],cube[10],cube[11],cube[12],cube[13],cube[14]
+
         mc=self.L_pm_MW(x_cl,y_cl,sx_cl,sy_cl,self.x_pm,self.y_pm,self.cv_pmraer,self.cv_pmdecer,self.cv_coeff)*fev*fcl*\
         self.King+(1-fev)*fcl*\
         self.L_sat_quad_r(self.x_ps,self.y_ps,the2,gam,k)*\

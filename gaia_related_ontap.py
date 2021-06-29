@@ -66,6 +66,9 @@ import gala.coordinates as gc
 #PANSTARRS
 import mastcasjobs
 
+from uncertainties import ufloat as uf
+from uncertainties import umath as um
+from uncertainties import unumpy as un
 import glob as glob
 import sys
 import os
@@ -73,6 +76,7 @@ import re
 import numpy as np
 import pylab
 import json
+import numpy.random as rand
 '''
 try: # Python 3.x
     from urllib.parse import quote as urlencode
@@ -184,12 +188,14 @@ class gaia:
         xa=gc.reflex_correct(c)
         f_data['pmra_SRM']=xa.pm_ra_cosdec
         f_data['pmdec_SRM']=xa.pm_dec
+        f_data['pmra_g_SRM']=xa.pm_ra_cosdec
+        f_data['pmdec_g_SRM']=xa.pm_dec
         cl = coord.SkyCoord(ra=RA*u.deg,
                            dec=DEC*u.deg,
                            distance=dist*u.pc,
                            pm_ra_cosdec=pmra*u.mas/u.yr,
                            pm_dec=pmdec*u.mas/u.yr,
-                           radial_velocity=0*u.km/u.s)
+                           radial_velocity=[0]*u.km/u.s)
         xal=gc.reflex_correct(cl)        
         for i in PB.progressbar(range(len(f_data))):
             a=np.deg2rad(f_data['ra'][i])
@@ -201,10 +207,24 @@ class gaia:
             f_data['pmdec_g_SRM'][i]=pmr*np.sin(decl)*np.sin(racl)+f_data['pmdec_SRM'][i]*\
             (np.cos(de)*np.cos(decl)+np.sin(de)*np.sin(decl)*np.cos(racl))
         f_data.write("{0}/{0}_bays_ready_FULL.fits".format(cluster),format="fits",overwrite=True)    
-        f_data=f_data['ra_g','dec_g','pmra_g','pmdec_g','pmra_error','pmdec_error','dist',\
-            'pmra_pmdec_corr','w_iso','pmra','pmdec','ra_error','dec_error','ra_dec_corr','p_cmdM','p_cmdC','pmra_g_SRM','pmdec_g_SRM']
+        f_data=f_data['ra_g','dec_g','pmra_g','pmdec_g','pmra_g_err','pmdec_g_err','dist',\
+            'pmra_pmdec_g_corr','w_iso','pmra','pmdec','ra_error','dec_error','p_cmdM','p_cmdC','pmra_g_SRM','pmdec_g_SRM']
         f_data.write("{0}/{0}_bays_ready.fits".format(cluster),format="fits",overwrite=True)  
 
+    def king_probability(self,cluster,cr,cre,tr,tre,dist):
+        f_in=fits.open("{0}/{0}_bays_ready.fits".format(cluster))
+        f_data=Table(f_in[1].data)
+        XA=(um.atan(uf(tr,tre)/(dist*1000)))*180/np.pi
+        tr=XA.n
+        tre=XA.s
+        XA=(um.atan(uf(cr,cre)/(dist*1000)))*180/np.pi
+        CR=XA.n
+        CRE=XA.s
+        self.radt=rand.normal(tr,tre,size=len(f_data))
+        self.radc=rand.normal(CR,CRE,size=len(f_data))
+        f_data['kg_tr']=self.radt
+        f_data['kg_cr']=self.radc
+        f_data.write("{0}/{0}_bays_ready.fits".format(cluster),format="fits",overwrite=True)
     
     def get_gaia_data(self,cluster,rad=4,force_run=False):
         '''

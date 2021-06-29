@@ -86,8 +86,8 @@ class PyNM:
             self.y_pm=M2['pmdec'] # Proper motion in dec_projection.
         else:
             print("Selecting projected PMs\n")
-            self.x_pm=M2['pmra_g'] # Proper motion in x_projection.
-            self.y_pm=M2['pmdec_g'] # Proper motion in y_projection.
+            self.x_pm=M2['pmra_g_SRM'] # Proper motion in x_projection.
+            self.y_pm=M2['pmdec_g_SRM'] # Proper motion in y_projection.
         self.cv_pmraer=M2['pmra_g_err']# Proper Motion Covariance Matrix elements - error in pmra
         self.cv_pmdecer=M2['pmdec_g_err'] # Proper motion err in pmdec
         self.cv_coeff=M2['pmra_pmdec_g_corr'] # Proper motion correlation factor between pmra and pmdec
