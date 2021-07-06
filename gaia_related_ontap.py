@@ -172,7 +172,7 @@ class gaia:
             raise ValueError("Unknown object '{}'".format(name))
         return (objRa, objDec)
 
-    def SRM_pm_correct(self,cluster,dist,pmra,pmdec,has_space="no",altname=False,specfile=""):
+    def SRM_pm_correct(self,cluster,dist,pmra,pmdec,new_faint=False,has_space="no",altname=False,specfile=""):
         center = coordinates.SkyCoord.from_name(cluster)
         RA=center.ra.value
         DEC=center.dec.value
@@ -206,6 +206,11 @@ class gaia:
             f_data['pmra_g_SRM'][i]=pmr*np.cos(racl)-f_data['pmdec_SRM'][i]*np.sin(de)*np.sin(racl)
             f_data['pmdec_g_SRM'][i]=pmr*np.sin(decl)*np.sin(racl)+f_data['pmdec_SRM'][i]*\
             (np.cos(de)*np.cos(decl)+np.sin(de)*np.sin(decl)*np.cos(racl))
+        if new_faint!=False:
+            try:
+                f_data=f_data[f_data['i_R0']<=new_faint]
+            except:
+                f_data=f_data[f_data['g_0']<=new_faint]
         f_data.write("{0}/{0}_bays_ready_FULL.fits".format(cluster),format="fits",overwrite=True)    
         f_data=f_data['ra_g','dec_g','pmra_g','pmdec_g','pmra_g_err','pmdec_g_err','dist',\
             'pmra_pmdec_g_corr','w_iso','pmra','pmdec','ra_error','dec_error','p_cmdM','p_cmdC','pmra_g_SRM','pmdec_g_SRM']
